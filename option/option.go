@@ -41,12 +41,12 @@ func (o Option[T]) DefaultWith(fn func() T) T {
 	return fn()
 }
 
-func None[T any]() Option[T] {
-	return Option[T]{state: none}
-}
-
 func Some[T any](val T) Option[T] {
 	return Option[T]{state: some, value: val}
+}
+
+func None[T any]() Option[T] {
+	return Option[T]{state: none}
 }
 
 func Match[T any, U any](o Option[T], some func(T) U, none func() U) U {
@@ -89,7 +89,14 @@ func OrElseWith[T any](o Option[T], ifNone func() Option[T]) Option[T] {
 	return Match(o, Some, ifNone)
 }
 
-func ForEach[T any](o Option[T], fn func(T)) {
+func Tap[T any](o Option[T], fn func(T)) Option[T] {
+	return Map(o, func(t T) T {
+		fn(t)
+		return t
+	})
+}
+
+func Iter[T any](o Option[T], fn func(T)) {
 	Do(o, fn, func() {})
 }
 

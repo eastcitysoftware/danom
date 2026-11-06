@@ -146,15 +146,13 @@ func TestDefaultWithLazy(t *testing.T) {
 func TestMatch(t *testing.T) {
 	if Match(None[string](),
 		func(x string) bool { return true },
-		func() bool { return false },
-	) {
+		func() bool { return false }) {
 		t.Error("Should not have invoked Some branch in match")
 	}
 
 	if Match(Some("danom"),
 		func(x string) bool { return false },
-		func() bool { return true },
-	) {
+		func() bool { return true }) {
 		t.Error("Should not have invoked Some branch in match")
 	}
 }
@@ -166,7 +164,7 @@ func TestDo(t *testing.T) {
 		func() {})
 
 	if state == 1 {
-		t.Error("Should not have invoked Some branch in match")
+		t.Error("Should not have invoked Some branch in do")
 	}
 
 	Do(Some[string]("danom"),
@@ -174,7 +172,7 @@ func TestDo(t *testing.T) {
 		func() { state = 2 })
 
 	if state == 2 {
-		t.Error("Should not have invoked Some branch in match")
+		t.Error("Should not have invoked Some branch in do")
 	}
 }
 
@@ -209,7 +207,7 @@ func TestMap(t *testing.T) {
 
 	value := Match(result, func(n int) int { return n }, func() int { return 0 })
 	if value != 2 {
-		t.Error("Bind function was not executed as expected")
+		t.Error("Map function was not executed as expected")
 	}
 }
 
@@ -227,6 +225,7 @@ func TestMapNone(t *testing.T) {
 		t.Error("Map should not invoke callback for None")
 	}
 }
+
 func TestApply(t *testing.T) {
 	result := Apply(Some(1), Some(func(n int) int { return n + 1 }))
 	expectSome(t, result)
@@ -301,23 +300,47 @@ func TestOrElseWith(t *testing.T) {
 	}
 }
 
-func TestForEach(t *testing.T) {
+func TestTap(t *testing.T) {
 	state := 0
 
-	ForEach(None[int](), func(n int) {
+	o := Tap(None[int](), func(n int) {
+		state = n
+	})
+
+	expectNone(t, o)
+
+	if state != 0 {
+		t.Error("Tap should not invoke callback for None")
+	}
+
+	o = Tap(Some(42), func(n int) {
+		state = n
+	})
+
+	expectSome(t, o)
+
+	if state != 42 {
+		t.Error("Tap should invoke callback with Some value")
+	}
+}
+
+func TestIter(t *testing.T) {
+	state := 0
+
+	Iter(None[int](), func(n int) {
 		state = n
 	})
 
 	if state != 0 {
-		t.Error("ForEach should not invoke callback for None")
+		t.Error("Iter should not invoke callback for None")
 	}
 
-	ForEach(Some(42), func(n int) {
+	Iter(Some(42), func(n int) {
 		state = n
 	})
 
 	if state != 42 {
-		t.Error("ForEach should invoke callback with Some value")
+		t.Error("Iter should invoke callback with Some value")
 	}
 }
 
