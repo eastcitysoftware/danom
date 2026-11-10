@@ -1,12 +1,11 @@
 # Danom API Reference
 
-Danom is organized into packages for optional values, success-or-error results, two-way choices, and validation.
+Danom is organized into packages for optional values, success-or-error results, and validation.
 
 ## Packages
 
 - [`option`](#option) — optional values.
 - [`result`](#result) — success or error outcomes.
-- [`choice`](#choice) — a value of one of two types.
 - [`check`](#check) — validation rules, facts, and errors.
 
 ## `option`
@@ -82,37 +81,6 @@ type Result[T any, E any] struct { /* unexported fields */ }
 - `func OrElseWith[T any, E any](r Result[T, E], ifError func() Result[T, E]) Result[T, E]` returns `r` when it is `Ok`, or calls `ifError` otherwise.
 - `func Tap[T any, E any](r Result[T, E], fn func(T)) Result[T, E]` calls `fn` for a success value and returns `r`.
 - `func Iter[T any, E any](r Result[T, E], fn func(T))` calls `fn` when `r` is `Ok`.
-
-## `choice`
-
-Import path: `github.com/eastcitysoftware/danom/choice`
-
-### Types
-
-```go
-type Choice[T1 any, T2 any] struct { /* unexported fields */ }
-```
-
-`Choice[T1, T2]` holds a value of type `T1` or `T2`. The zero value holds the zero value of `T1`.
-
-#### Methods
-
-- `func (c Choice[T1, T2]) IsT1() bool` reports whether `c` holds a `T1`.
-- `func (c Choice[T1, T2]) IsT2() bool` reports whether `c` holds a `T2`.
-- `func (c Choice[T1, T2]) T1() (T1, bool)` returns the `T1` value and `true` when `c` holds `T1`; otherwise returns the zero value and `false`.
-- `func (c Choice[T1, T2]) T2() (T2, bool)` returns the `T2` value and `true` when `c` holds `T2`; otherwise returns the zero value and `false`.
-- `func (c Choice[T1, T2]) Swap() Choice[T2, T1]` returns a choice with the type parameters and held value reversed.
-
-### Functions
-
-- `func OfT1[T1 any, T2 any](t T1) Choice[T1, T2]` creates a `Choice` holding a `T1`.
-- `func OfT2[T1 any, T2 any](t T2) Choice[T1, T2]` creates a `Choice` holding a `T2`.
-- `func Match[T1 any, T2, U any](c Choice[T1, T2], t1Fn func(T1) U, t2Fn func(T2) U) U` calls the handler for the held type and returns its result.
-- `func Do[T1 any, T2 any](c Choice[T1, T2], t1Fn func(T1), t2Fn func(T2))` calls the handler for the held type.
-- `func BindT1[T1 any, T2 any, U any](c Choice[T1, T2], fn func(T1) Choice[U, T2]) Choice[U, T2]` applies `fn` to a `T1`, leaving a `T2` unchanged.
-- `func MapT1[T1 any, T2 any, U any](c Choice[T1, T2], fn func(T1) U) Choice[U, T2]` transforms a `T1`, leaving a `T2` unchanged.
-- `func BindT2[T1 any, T2 any, U any](c Choice[T1, T2], fn func(T2) Choice[T1, U]) Choice[T1, U]` applies `fn` to a `T2`, leaving a `T1` unchanged.
-- `func MapT2[T1 any, T2 any, U any](c Choice[T1, T2], fn func(T2) U) Choice[T1, U]` transforms a `T2`, leaving a `T1` unchanged.
 
 ## `check`
 
