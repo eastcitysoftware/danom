@@ -8,7 +8,6 @@ Danom is organized into packages for optional values, success-or-error results, 
 - [`result`](#result) — success or error outcomes.
 - [`choice`](#choice) — a value of one of two types.
 - [`check`](#check) — validation rules, facts, and errors.
-- [`danom`](#danom) — root package.
 
 ## `option`
 
@@ -245,9 +244,3 @@ These functions accept types supported by `cmp.Ordered`.
 - `func DurationLessThan(t time.Duration) Fact[time.Duration]` succeeds when a duration is less than `t`.
 - `func DurationGreaterThan(t time.Duration) Fact[time.Duration]` succeeds when a duration is greater than `t`.
 - `func DurationPositive() Fact[time.Duration]` succeeds when a duration is greater than zero.
-
-## `danom`
-
-Import path: `github.com/eastcitysoftware/danom`
-
-- `func Abc()` runs the package's sample validation and prints a diagnostic if it fails.
