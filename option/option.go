@@ -41,6 +41,14 @@ func (o Option[T]) DefaultWith(fn func() T) T {
 	return fn()
 }
 
+func IsSome[T any](o Option[T]) bool {
+	return o.IsSome()
+}
+
+func IsNone[T any](o Option[T]) bool {
+	return o.IsNone()
+}
+
 func Some[T any](val T) Option[T] {
 	return Option[T]{state: some, value: val}
 }
