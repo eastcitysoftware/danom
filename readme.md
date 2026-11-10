@@ -76,7 +76,7 @@ func main() {
 
 An `Option[T]` represents a value that may or may not be present. Create one with `option.Some(value)` or `option.None[T]()`. `Some` represents a present value independently of whether that value is nil.
 
-Use `TryGet` when you want ordinary Go control flow, or `Match` to handle both cases:
+Use `Value` when you want ordinary Go control flow, or `Match` to handle both cases:
 
 ```go
 package main
@@ -88,7 +88,7 @@ import (
 )
 
 func main() {
-    value, ok := option.Some(5).TryGet()
+    value, ok := option.Some(5).Value()
     if ok {
         fmt.Println(value)
     }

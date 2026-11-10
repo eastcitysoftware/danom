@@ -25,7 +25,7 @@ type Option[T any] struct { /* unexported fields */ }
 
 - `func (o Option[T]) IsSome() bool` reports whether `o` contains a value.
 - `func (o Option[T]) IsNone() bool` reports whether `o` has no value.
-- `func (o Option[T]) TryGet() (T, bool)` returns the value and `true` when `o` is `Some`; otherwise returns the zero value and `false`.
+- `func (o Option[T]) Value() (T, bool)` returns the value and `true` when `o` is `Some`; otherwise returns the zero value and `false`.
 - `func (o Option[T]) DefaultValue(d T) T` returns the value or `d` when `o` is `None`.
 - `func (o Option[T]) DefaultWith(fn func() T) T` returns the value or calls `fn` when `o` is `None`.
 

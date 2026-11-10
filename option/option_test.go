@@ -65,7 +65,7 @@ func TestSomeNil(t *testing.T) {
 
 	o := Some(ptr)
 
-	value, ok := o.TryGet()
+	value, ok := o.Value()
 
 	if !ok {
 		t.Error("Some(nil) should still be Some")
@@ -76,27 +76,27 @@ func TestSomeNil(t *testing.T) {
 	}
 }
 
-func TestTryGet(t *testing.T) {
-	if _, ok := Some(1).TryGet(); !ok {
+func TestValue(t *testing.T) {
+	if _, ok := Some(1).Value(); !ok {
 		t.Error("Expected value, but found none")
 	}
 
-	if _, ok := None[int]().TryGet(); ok {
+	if _, ok := None[int]().Value(); ok {
 		t.Error("Expected none, but found value")
 	}
 }
 
-func TestTryGetZeroValue(t *testing.T) {
+func TestValueZeroValue(t *testing.T) {
 	var o Option[int]
 
-	value, ok := o.TryGet()
+	value, ok := o.Value()
 
 	if ok {
 		t.Error("Zero-value Option should be None")
 	}
 
 	if value != 0 {
-		t.Error("TryGet should return zero value for None")
+		t.Error("Value should return zero value for None")
 	}
 }
 
@@ -383,7 +383,7 @@ func TestFilterPreservesZeroValue(t *testing.T) {
 
 	expectSome(t, result)
 
-	value, ok := result.TryGet()
+	value, ok := result.Value()
 	if !ok || value != 0 {
 		t.Error("Filter should preserve Some(0)")
 	}

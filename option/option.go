@@ -21,9 +21,9 @@ func (o Option[T]) IsNone() bool {
 	return o.state == none
 }
 
-// TryGet returns the value and true when the Option is Some.
+// Value returns the value and true when the Option is Some.
 // Otherwise, it returns the zero value of T and false.
-func (o Option[T]) TryGet() (T, bool) {
+func (o Option[T]) Value() (T, bool) {
 	if o.IsSome() {
 		return o.value, true
 	}
@@ -34,7 +34,7 @@ func (o Option[T]) TryGet() (T, bool) {
 
 // DefaultValue returns the Option's value, or d when it is None.
 func (o Option[T]) DefaultValue(d T) T {
-	if value, ok := o.TryGet(); ok {
+	if value, ok := o.Value(); ok {
 		return value
 	}
 	return d
@@ -42,7 +42,7 @@ func (o Option[T]) DefaultValue(d T) T {
 
 // DefaultWith returns the Option's value, or calls fn when it is None.
 func (o Option[T]) DefaultWith(fn func() T) T {
-	if value, ok := o.TryGet(); ok {
+	if value, ok := o.Value(); ok {
 		return value
 	}
 	return fn()
@@ -70,7 +70,7 @@ func None[T any]() Option[T] {
 
 // Match calls some with the value when o is Some, or calls none otherwise.
 func Match[T any, U any](o Option[T], some func(T) U, none func() U) U {
-	if value, ok := o.TryGet(); ok {
+	if value, ok := o.Value(); ok {
 		return some(value)
 	}
 
@@ -130,7 +130,7 @@ func Iter[T any](o Option[T], fn func(T)) {
 
 // Filter returns o when it is Some and its value satisfies pred; otherwise it returns None.
 func Filter[T any](o Option[T], pred func(T) bool) Option[T] {
-	if value, ok := o.TryGet(); ok && pred(value) {
+	if value, ok := o.Value(); ok && pred(value) {
 		return Some(value)
 	}
 	return None[T]()
