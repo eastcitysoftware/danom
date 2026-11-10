@@ -63,7 +63,8 @@ type Result[T any, E any] struct { /* unexported fields */ }
 
 - `func (r Result[T, E]) IsOk() bool` reports whether `r` contains a success value.
 - `func (r Result[T, E]) IsError() bool` reports whether `r` contains an error.
-- `func (r Result[T, E]) TryGet() (T, E, bool)` returns the success value, error value, and whether `r` is `Ok`.
+- `func (r Result[T, E]) Value() (T, bool)` returns the success value and `true` when `r` is `Ok`; otherwise returns the zero value and `false`.
+- `func (r Result[T, E]) ErrorValue() (E, bool)` returns the error value and `true` when `r` is an `Error`; otherwise returns the zero value and `false`.
 - `func (r Result[T, E]) DefaultValue(d T) T` returns the success value or `d` when `r` is an `Error`.
 - `func (r Result[T, E]) DefaultWith(fn func() T) T` returns the success value or calls `fn` when `r` is an `Error`.
 

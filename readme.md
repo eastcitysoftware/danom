@@ -108,7 +108,7 @@ func main() {
 
 A `Result[T, E]` represents either a value of type `T` or an error value of type `E`. Create one with `result.Ok[T, E](value)` or `result.Error[T, E](err)`. The error type is chosen by the caller and is not required to implement Go's `error` interface.
 
-Use `TryGet` for procedural handling or `Match` to provide a handler for each case:
+Use `Value` and `ErrorValue` for procedural handling, or `Match` to provide a handler for each case:
 
 ```go
 package main
@@ -120,13 +120,12 @@ import (
 )
 
 func main() {
-    outcome := result.Error[int, string]("not found")
-    message := result.Match(
-        outcome,
-        func(value int) string { return fmt.Sprintf("Value: %d", value) },
-        func(err string) string { return fmt.Sprintf("Error: %s", err) },
-    )
-    fmt.Println(message)
+    outcome := result.Ok[int, string](42)
+    if value, ok := outcome.Value(); ok {
+        fmt.Printf("Value: %d\n", value)
+    } else if err, ok := outcome.ErrorValue(); ok {
+        fmt.Printf("Error: %s\n", err)
+    }
 }
 ```
 
@@ -186,7 +185,9 @@ func main() {
     )
 
     outcome := validate.Validate(User{Name: "", Age: 16})
-    if _, errs, ok := outcome.TryGet(); !ok {
+    if user, ok := outcome.Value(); ok {
+        fmt.Printf("Valid user: %+v\n", user)
+    } else if errs, ok := outcome.ErrorValue(); ok {
         fmt.Println(errs)
     }
 }

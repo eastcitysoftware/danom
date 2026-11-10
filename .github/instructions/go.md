@@ -330,6 +330,7 @@ Follow idiomatic Go practices and community standards when writing Go code. Thes
 - Keep documentation close to code
 - Update documentation when code changes
 - Avoid emoji in documentation and comments
+- Use spaces for indentation (no tabs)
 
 ### README and Documentation Files
 

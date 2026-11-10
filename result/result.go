@@ -22,21 +22,31 @@ func (o Result[T, E]) IsError() bool {
 	return o.state == error
 }
 
-// TryGet returns the success value, error value, and whether the Result is Ok.
-func (o Result[T, E]) TryGet() (T, E, bool) {
-	var zeroT T
-	var zeroE E
-
+// Value returns the success value and true when the Result is Ok.
+// Otherwise, it returns the zero value of T and false.
+func (o Result[T, E]) Value() (T, bool) {
 	if o.IsOk() {
-		return o.ok, zeroE, true
+		return o.ok, true
 	}
 
-	return zeroT, o.error, false
+	var zero T
+	return zero, false
+}
+
+// ErrorValue returns the error value and true when the Result is an Error.
+// Otherwise, it returns the zero value of E and false.
+func (o Result[T, E]) ErrorValue() (E, bool) {
+	if o.IsError() {
+		return o.error, true
+	}
+
+	var zero E
+	return zero, false
 }
 
 // DefaultValue returns the success value, or d when the Result is an Error.
 func (o Result[T, E]) DefaultValue(d T) T {
-	if value, _, ok := o.TryGet(); ok {
+	if value, ok := o.Value(); ok {
 		return value
 	}
 	return d
@@ -44,7 +54,7 @@ func (o Result[T, E]) DefaultValue(d T) T {
 
 // DefaultWith returns the success value, or calls fn when the Result is an Error.
 func (o Result[T, E]) DefaultWith(fn func() T) T {
-	if value, _, ok := o.TryGet(); ok {
+	if value, ok := o.Value(); ok {
 		return value
 	}
 	return fn()
@@ -64,20 +74,21 @@ func Error[T any, E any](e E) Result[T, E] {
 
 // Match calls the handler for the state of r and returns its result.
 func Match[T any, E any, U any](r Result[T, E], ok func(T) U, error func(E) U) U {
-	v, e, isOk := r.TryGet()
-	if isOk {
-		return ok(v)
+	if value, isOk := r.Value(); isOk {
+		return ok(value)
 	}
-	return error(e)
+
+	err, _ := r.ErrorValue()
+	return error(err)
 }
 
 // Do calls the handler for the state of r.
 func Do[T any, E any](r Result[T, E], ok func(T), error func(E)) {
-	v, e, isOk := r.TryGet()
-	if isOk {
-		ok(v)
+	if value, isOk := r.Value(); isOk {
+		ok(value)
 	} else {
-		error(e)
+		err, _ := r.ErrorValue()
+		error(err)
 	}
 }
 

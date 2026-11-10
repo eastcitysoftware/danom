@@ -16,13 +16,23 @@ func TestIsError(t *testing.T) {
 	}
 }
 
-func TestTryGet(t *testing.T) {
-	if _, _, ok := Ok[int, string](1).TryGet(); !ok {
+func TestValue(t *testing.T) {
+	if value, ok := Ok[int, string](1).Value(); !ok || value != 1 {
 		t.Error("Expected Ok got Error")
 	}
 
-	if _, _, ok := Error[int, string]("danom").TryGet(); ok {
+	if value, ok := Error[int, string]("danom").Value(); ok || value != 0 {
 		t.Error("Expected Error got Ok")
+	}
+}
+
+func TestErrorValue(t *testing.T) {
+	if value, ok := Error[int, string]("danom").ErrorValue(); !ok || value != "danom" {
+		t.Error("Expected Error value")
+	}
+
+	if value, ok := Ok[int, string](1).ErrorValue(); ok || value != "" {
+		t.Error("Expected no Error value")
 	}
 }
 
