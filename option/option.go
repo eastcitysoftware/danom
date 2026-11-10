@@ -1,3 +1,6 @@
+// Package option provides Option[T], a type-safe representation of a value
+// that may be present (Some) or absent (None), along with functions for
+// matching, mapping, and binding over it.
 package option
 
 const (

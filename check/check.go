@@ -1,3 +1,6 @@
+// Package check provides composable validation. A Fact is a function that
+// inspects a value and returns messages describing any failures; facts can be
+// combined into rules, and built-in facts for common checks are included.
 package check
 
 import (

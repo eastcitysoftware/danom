@@ -1,3 +1,6 @@
+// Package result provides Result[T, E], a type-safe representation of an
+// operation that either succeeds with a value (Ok) or fails with an expected
+// error (Error), along with functions for matching, mapping, and binding over it.
 package result
 
 const (

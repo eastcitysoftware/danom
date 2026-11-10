@@ -1,3 +1,6 @@
+// Package choice provides Choice[T1, T2], a type-safe representation of a
+// value that is exactly one of two types, along with functions for matching,
+// mapping, and binding over either side.
 package choice
 
 const (
