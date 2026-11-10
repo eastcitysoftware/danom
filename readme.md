@@ -110,26 +110,26 @@ import (
 )
 
 type User struct {
-	Name string
-	Age  int
+    Name string
+    Age  int
 }
 
 func main() {
-	validate := check.NewValidator(
-		check.NewRule("name", func(user User) string { return user.Name },
-			check.StrNotEmpty(),
-			check.StrLengthBetween(2, 40)),
-		check.NewRule("age", func(user User) int { return user.Age },
-			check.Between(18, 120)),
-	)
+    validate := check.NewValidator(
+        check.NewRule("name", func(user User) string { return user.Name },
+            check.StrNotEmpty(),
+            check.StrLengthBetween(2, 40)),
+        check.NewRule("age", func(user User) int { return user.Age },
+            check.Between(18, 120)),
+    )
 
-	input := User{Name: "", Age: 16}
-	outcome := validate.Validate(input)
-	if user, ok := outcome.Value(); ok {
-		fmt.Printf("Valid user: %+v\n", user)
-	} else if errs, ok := outcome.ErrorValue(); ok {
-		fmt.Println(errs)
-	}
+    input := User{Name: "", Age: 16}
+    outcome := validate.Validate(input)
+    if user, ok := outcome.Value(); ok {
+        fmt.Printf("Valid user: %+v\n", user)
+    } else if errs, ok := outcome.ErrorValue(); ok {
+        fmt.Println(errs)
+    }
 }
 ```
 
