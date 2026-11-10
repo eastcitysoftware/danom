@@ -1,5 +1,7 @@
 # Danom
 
+[![build](https://github.com/eastcitysoftware/danom/actions/workflows/build.yml/badge.svg)](https://github.com/eastcitysoftware/danom/actions/workflows/build.yml)
+
 Danom provides generic `Option`, `Result`, and `Choice` types, along with composable validation, for Go. It offers a type-safe way to represent optional values, expected errors, and values that may be one of two types, with functions for matching and transforming them.
 
 ## Key Features
