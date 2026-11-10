@@ -7,21 +7,28 @@ import (
 	"github.com/eastcitysoftware/danom/result"
 )
 
+// Error contains the validation errors for a named rule.
 type Error struct {
 	Name   string
 	Errors []string
 }
 
+// Errors is the collection of validation errors returned by a Validator.
 type Errors []Error
 
+// Message formats a validation message using the name of the value being checked.
 type Message func(string) string
 
+// Fact checks a value and returns messages for any failed conditions.
 type Fact[T any] func(T) []Message
 
+// Rule validates an input and returns its named Error.
 type Rule[T any] func(T) Error
 
+// Validator applies rules to an input and returns the input or its validation errors.
 type Validator[T any] func(T) result.Result[T, Errors]
 
+// NewValidator creates a Validator that evaluates each rule and collects its errors.
 func NewValidator[T any](rules ...Rule[T]) Validator[T] {
 	return func(input T) result.Result[T, Errors] {
 		var errors Errors
@@ -42,6 +49,7 @@ func NewValidator[T any](rules ...Rule[T]) Validator[T] {
 	}
 }
 
+// NewRule creates a named Rule that selects a value and checks it against facts.
 func NewRule[T, U any](name string, selector func(T) U, preds ...Fact[U]) Rule[T] {
 	return func(input T) Error {
 		e := Error{Name: name}
@@ -58,6 +66,7 @@ func NewRule[T, U any](name string, selector func(T) U, preds ...Fact[U]) Rule[T
 	}
 }
 
+// NewFact creates a Fact that returns message when pred is false.
 func NewFact[T any](pred func(T) bool, message Message) Fact[T] {
 	return func(input T) []Message {
 		if !pred(input) {
@@ -68,6 +77,7 @@ func NewFact[T any](pred func(T) bool, message Message) Fact[T] {
 	}
 }
 
+// NewMessage creates a Message using fmt.Sprintf with the rule name as its first argument.
 func NewMessage(format string, args ...any) Message {
 	return func(name string) string {
 		values := make([]any, 1, len(args)+1)
@@ -77,14 +87,17 @@ func NewMessage(format string, args ...any) Message {
 	}
 }
 
+// Validate applies the Validator to input.
 func (v Validator[T]) Validate(input T) result.Result[T, Errors] {
 	return v(input)
 }
 
+// String formats the validation error with its rule name and messages.
 func (e Error) String() string {
 	return e.Name + " - " + strings.Join(e.Errors, " | ")
 }
 
+// String formats the validation errors as a bracketed list.
 func (e Errors) String() string {
 	parts := make([]string, len(e))
 
@@ -95,6 +108,7 @@ func (e Errors) String() string {
 	return "[ " + strings.Join(parts, "; ") + " ]"
 }
 
+// Error implements the error interface.
 func (e Errors) Error() string {
 	return e.String()
 }
