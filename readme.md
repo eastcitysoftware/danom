@@ -155,7 +155,7 @@ func main() {
 }
 ```
 
-`IsT1` and `IsT2` inspect which type is held; `TryGetT1` and `TryGetT2` retrieve it. `MapT1` and `MapT2` transform one side, while `BindT1` and `BindT2` chain a function that returns another `Choice`. The package also provides `Do` and `Swap`.
+`IsT1` and `IsT2` inspect which type is held; `T1` and `T2` retrieve it. `MapT1` and `MapT2` transform one side, while `BindT1` and `BindT2` chain a function that returns another `Choice`. The package also provides `Do` and `Swap`.
 
 ## Validation
 

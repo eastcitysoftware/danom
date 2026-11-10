@@ -22,9 +22,9 @@ func (c Choice[T1, T2]) IsT2() bool {
 	return c.state == t2
 }
 
-// TryGetT1 returns the T1 value and true when the Choice holds T1.
+// T1 returns the T1 value and true when the Choice holds T1.
 // Otherwise, it returns the zero value of T1 and false.
-func (o Choice[T1, T2]) TryGetT1() (T1, bool) {
+func (o Choice[T1, T2]) T1() (T1, bool) {
 	if o.IsT1() {
 		return o.t1, true
 	}
@@ -33,9 +33,9 @@ func (o Choice[T1, T2]) TryGetT1() (T1, bool) {
 	return zero, false
 }
 
-// TryGetT2 returns the T2 value and true when the Choice holds T2.
+// T2 returns the T2 value and true when the Choice holds T2.
 // Otherwise, it returns the zero value of T2 and false.
-func (o Choice[T1, T2]) TryGetT2() (T2, bool) {
+func (o Choice[T1, T2]) T2() (T2, bool) {
 	if o.IsT2() {
 		return o.t2, true
 	}
@@ -67,11 +67,11 @@ func OfT2[T1 any, T2 any](t T2) Choice[T1, T2] {
 
 // Match calls the function for the type held by the Choice and returns its result.
 func Match[T1 any, T2, U any](o Choice[T1, T2], t1Fn func(T1) U, t2Fn func(T2) U) U {
-	if value, ok := o.TryGetT1(); ok {
+	if value, ok := o.T1(); ok {
 		return t1Fn(value)
 	}
 
-	if value, ok := o.TryGetT2(); ok {
+	if value, ok := o.T2(); ok {
 		return t2Fn(value)
 	}
 
@@ -81,11 +81,11 @@ func Match[T1 any, T2, U any](o Choice[T1, T2], t1Fn func(T1) U, t2Fn func(T2) U
 
 // Do calls the function for the type held by the Choice.
 func Do[T1 any, T2 any](o Choice[T1, T2], t1Fn func(T1), t2Fn func(T2)) {
-	if value, ok := o.TryGetT1(); ok {
+	if value, ok := o.T1(); ok {
 		t1Fn(value)
 	}
 
-	if value, ok := o.TryGetT2(); ok {
+	if value, ok := o.T2(); ok {
 		t2Fn(value)
 	}
 }

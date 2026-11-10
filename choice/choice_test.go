@@ -24,32 +24,40 @@ func TestOfT2(t *testing.T) {
 	expectT2(t, OfT2[int, string]("danom"))
 }
 
-func TestTryGetT1(t *testing.T) {
-	if _, ok := OfT1[int, string](1).TryGetT1(); !ok {
-		t.Error("Expected T1, but found T2")
+func TestT1(t *testing.T) {
+	if value, ok := OfT1[int, string](1).T1(); !ok || value != 1 {
+		t.Errorf("T1() = (%v, %v), want (1, true)", value, ok)
 	}
 
-	if _, ok := OfT2[int, string]("danom").TryGetT1(); ok {
-		t.Error("Expected T2, but found T1")
+	if value, ok := OfT2[int, string]("danom").T1(); ok || value != 0 {
+		t.Errorf("T1() = (%v, %v), want (0, false)", value, ok)
+	}
+
+	if value, ok := OfT1[int, string](0).T1(); !ok || value != 0 {
+		t.Errorf("T1() = (%v, %v), want (0, true)", value, ok)
 	}
 }
 
-func TestTryGetT2(t *testing.T) {
-	if _, ok := OfT2[int, string]("danom").TryGetT2(); !ok {
-		t.Error("Expected T2, but found T1")
+func TestT2(t *testing.T) {
+	if value, ok := OfT2[int, string]("danom").T2(); !ok || value != "danom" {
+		t.Errorf("T2() = (%q, %v), want (danom, true)", value, ok)
 	}
 
-	if _, ok := OfT1[int, string](1).TryGetT2(); ok {
-		t.Error("Expected T1, but found T2")
+	if value, ok := OfT1[int, string](1).T2(); ok || value != "" {
+		t.Errorf("T2() = (%q, %v), want (\"\", false)", value, ok)
+	}
+
+	if value, ok := OfT2[int, string]("").T2(); !ok || value != "" {
+		t.Errorf("T2() = (%q, %v), want (\"\", true)", value, ok)
 	}
 }
 
 func TestSwap(t *testing.T) {
-	if _, ok := OfT1[int, string](1).Swap().TryGetT2(); !ok {
+	if _, ok := OfT1[int, string](1).Swap().T2(); !ok {
 		t.Error("After swap exptected T1 value")
 	}
 
-	if _, ok := OfT2[int, string]("danom").Swap().TryGetT1(); !ok {
+	if _, ok := OfT2[int, string]("danom").Swap().T1(); !ok {
 		t.Error("After swap exptected T2 value")
 	}
 }

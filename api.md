@@ -99,8 +99,8 @@ type Choice[T1 any, T2 any] struct { /* unexported fields */ }
 
 - `func (c Choice[T1, T2]) IsT1() bool` reports whether `c` holds a `T1`.
 - `func (c Choice[T1, T2]) IsT2() bool` reports whether `c` holds a `T2`.
-- `func (c Choice[T1, T2]) TryGetT1() (T1, bool)` returns the `T1` value and `true` when `c` holds `T1`; otherwise returns the zero value and `false`.
-- `func (c Choice[T1, T2]) TryGetT2() (T2, bool)` returns the `T2` value and `true` when `c` holds `T2`; otherwise returns the zero value and `false`.
+- `func (c Choice[T1, T2]) T1() (T1, bool)` returns the `T1` value and `true` when `c` holds `T1`; otherwise returns the zero value and `false`.
+- `func (c Choice[T1, T2]) T2() (T2, bool)` returns the `T2` value and `true` when `c` holds `T2`; otherwise returns the zero value and `false`.
 - `func (c Choice[T1, T2]) Swap() Choice[T2, T1]` returns a choice with the type parameters and held value reversed.
 
 ### Functions
