@@ -26,49 +26,49 @@ Requires Go 1.25.0 or later.
 package main
 
 import (
-	"fmt"
+    "fmt"
 
-	"github.com/eastcitysoftware/danom/choice"
-	"github.com/eastcitysoftware/danom/option"
-	"github.com/eastcitysoftware/danom/result"
+    "github.com/eastcitysoftware/danom/choice"
+    "github.com/eastcitysoftware/danom/option"
+    "github.com/eastcitysoftware/danom/result"
 )
 
 func divide(numerator, denominator int) result.Result[int, string] {
-	if denominator == 0 {
-		return result.Error[int, string]("Cannot divide by zero")
-	}
+    if denominator == 0 {
+        return result.Error[int, string]("Cannot divide by zero")
+    }
 
-	return result.Ok[int, string](numerator / denominator)
+    return result.Ok[int, string](numerator / denominator)
 }
 
 func main() {
-	// Option
-	doubled := option.Map(option.Some(5), func(x int) int {
-		return x * 2
-	})
-	fmt.Println(option.Match(
-		doubled,
-		func(x int) string { return fmt.Sprintf("Value: %d", x) },
-		func() string { return "No value" },
-	))
+    // Option
+    doubled := option.Map(option.Some(5), func(x int) int {
+        return x * 2
+    })
+    fmt.Println(option.Match(
+        doubled,
+        func(x int) string { return fmt.Sprintf("Value: %d", x) },
+        func() string { return "No value" },
+    ))
 
-	// Result
-	answer := result.Map(divide(10, 2), func(x int) int {
-		return x + 1
-	})
-	fmt.Println(result.Match(
-		answer,
-		func(x int) string { return fmt.Sprintf("Result: %d", x) },
-		func(err string) string { return fmt.Sprintf("Error: %s", err) },
-	))
+    // Result
+    answer := result.Map(divide(10, 2), func(x int) int {
+        return x + 1
+    })
+    fmt.Println(result.Match(
+        answer,
+        func(x int) string { return fmt.Sprintf("Result: %d", x) },
+        func(err string) string { return fmt.Sprintf("Error: %s", err) },
+    ))
 
-	// Choice
-	value := choice.OfT2[int, string]("hello")
-	fmt.Println(choice.Match(
-		value,
-		func(x int) string { return fmt.Sprintf("Got int: %d", x) },
-		func(s string) string { return fmt.Sprintf("Got string: %s", s) },
-	))
+    // Choice
+    value := choice.OfT2[int, string]("hello")
+    fmt.Println(choice.Match(
+        value,
+        func(x int) string { return fmt.Sprintf("Got int: %d", x) },
+        func(s string) string { return fmt.Sprintf("Got string: %s", s) },
+    ))
 }
 ```
 
@@ -82,23 +82,23 @@ Use `TryGet` when you want ordinary Go control flow, or `Match` to handle both c
 package main
 
 import (
-	"fmt"
+    "fmt"
 
-	"github.com/eastcitysoftware/danom/option"
+    "github.com/eastcitysoftware/danom/option"
 )
 
 func main() {
-	value, ok := option.Some(5).TryGet()
-	if ok {
-		fmt.Println(value)
-	}
+    value, ok := option.Some(5).TryGet()
+    if ok {
+        fmt.Println(value)
+    }
 
-	description := option.Match(
-		option.None[int](),
-		func(value int) string { return fmt.Sprintf("Value: %d", value) },
-		func() string { return "No value" },
-	)
-	fmt.Println(description)
+    description := option.Match(
+        option.None[int](),
+        func(value int) string { return fmt.Sprintf("Value: %d", value) },
+        func() string { return "No value" },
+    )
+    fmt.Println(description)
 }
 ```
 
@@ -114,19 +114,19 @@ Use `TryGet` for procedural handling or `Match` to provide a handler for each ca
 package main
 
 import (
-	"fmt"
+    "fmt"
 
-	"github.com/eastcitysoftware/danom/result"
+    "github.com/eastcitysoftware/danom/result"
 )
 
 func main() {
-	outcome := result.Error[int, string]("not found")
-	message := result.Match(
-		outcome,
-		func(value int) string { return fmt.Sprintf("Value: %d", value) },
-		func(err string) string { return fmt.Sprintf("Error: %s", err) },
-	)
-	fmt.Println(message)
+    outcome := result.Error[int, string]("not found")
+    message := result.Match(
+        outcome,
+        func(value int) string { return fmt.Sprintf("Value: %d", value) },
+        func(err string) string { return fmt.Sprintf("Error: %s", err) },
+    )
+    fmt.Println(message)
 }
 ```
 
@@ -140,19 +140,19 @@ A `Choice[T1, T2]` holds a value of either `T1` or `T2`. Use `choice.OfT1[T1, T2
 package main
 
 import (
-	"fmt"
+    "fmt"
 
-	"github.com/eastcitysoftware/danom/choice"
+    "github.com/eastcitysoftware/danom/choice"
 )
 
 func main() {
-	value := choice.OfT1[int, string](42)
-	message := choice.Match(
-		value,
-		func(n int) string { return fmt.Sprintf("Got int: %d", n) },
-		func(s string) string { return fmt.Sprintf("Got string: %s", s) },
-	)
-	fmt.Println(message)
+    value := choice.OfT1[int, string](42)
+    message := choice.Match(
+        value,
+        func(n int) string { return fmt.Sprintf("Got int: %d", n) },
+        func(s string) string { return fmt.Sprintf("Got string: %s", s) },
+    )
+    fmt.Println(message)
 }
 ```
 
@@ -166,29 +166,29 @@ The `check` package builds validators from named rules. A rule selects a value f
 package main
 
 import (
-	"fmt"
+    "fmt"
 
-	"github.com/eastcitysoftware/danom/check"
+    "github.com/eastcitysoftware/danom/check"
 )
 
 type User struct {
-	Name string
-	Age  int
+    Name string
+    Age  int
 }
 
 func main() {
-	validate := check.NewValidator(
-		check.NewRule("name", func(user User) string { return user.Name },
-			check.StrNotEmpty(),
-			check.StrLengthBetween(2, 40)),
-		check.NewRule("age", func(user User) int { return user.Age },
-			check.GreaterThanOrEqual(18)),
-	)
+    validate := check.NewValidator(
+        check.NewRule("name", func(user User) string { return user.Name },
+            check.StrNotEmpty(),
+            check.StrLengthBetween(2, 40)),
+        check.NewRule("age", func(user User) int { return user.Age },
+            check.GreaterThanOrEqual(18)),
+    )
 
-	outcome := validate.Validate(User{Name: "", Age: 16})
-	if _, errs, ok := outcome.TryGet(); !ok {
-		fmt.Println(errs)
-	}
+    outcome := validate.Validate(User{Name: "", Age: 16})
+    if _, errs, ok := outcome.TryGet(); !ok {
+        fmt.Println(errs)
+    }
 }
 ```
 
