@@ -5,59 +5,43 @@ import (
 )
 
 func TestSomeNone(t *testing.T) {
-	expectNone(t, None[uint8]())
 	expectSome(t, Some[uint8](1))
-
-	expectNone(t, None[uint16]())
 	expectSome(t, Some[uint16](1))
-
-	expectNone(t, None[uint32]())
 	expectSome(t, Some[uint32](1))
-
-	expectNone(t, None[uint64]())
 	expectSome(t, Some[uint64](1))
-
-	expectNone(t, None[int8]())
 	expectSome(t, Some[int8](1))
-
-	expectNone(t, None[int16]())
 	expectSome(t, Some[int16](1))
-
-	expectNone(t, None[int32]())
 	expectSome(t, Some[int32](1))
-
-	expectNone(t, None[int64]())
 	expectSome(t, Some[int64](1))
-
-	expectNone(t, None[float32]())
 	expectSome(t, Some[float32](1))
-
-	expectNone(t, None[float64]())
 	expectSome(t, Some[float64](1))
-
-	expectNone(t, None[complex64]())
 	expectSome(t, Some[complex64](1))
-
-	expectNone(t, None[complex128]())
 	expectSome(t, Some[complex128](1))
-
-	expectNone(t, None[byte]())
 	expectSome(t, Some[byte](1))
-
-	expectNone(t, None[rune]())
 	expectSome(t, Some('d'))
-
-	expectNone(t, None[string]())
 	expectSome(t, Some("danom"))
-
-	expectNone(t, None[mockType]())
 	expectSome(t, Some(mockType{name: "danom", age: Some(86)}))
+	expectSome(t, mockType{name: "danom", age: Some(86)}.age)
+}
 
-	fieldNone := mockType{name: "danom", age: None[int]()}
-	expectNone(t, fieldNone.age)
-
-	fieldSome := mockType{name: "danom", age: Some(86)}
-	expectSome(t, fieldSome.age)
+func TestNone(t *testing.T) {
+	expectNone(t, None[uint8]())
+	expectNone(t, None[uint16]())
+	expectNone(t, None[uint32]())
+	expectNone(t, None[uint64]())
+	expectNone(t, None[int8]())
+	expectNone(t, None[int16]())
+	expectNone(t, None[int32]())
+	expectNone(t, None[int64]())
+	expectNone(t, None[float32]())
+	expectNone(t, None[float64]())
+	expectNone(t, None[complex64]())
+	expectNone(t, None[complex128]())
+	expectNone(t, None[byte]())
+	expectNone(t, None[rune]())
+	expectNone(t, None[string]())
+	expectNone(t, None[mockType]())
+	expectNone(t, mockType{name: "danom", age: None[int]()}.age)
 }
 
 func TestSomeNil(t *testing.T) {
@@ -143,6 +127,118 @@ func TestDefaultWithLazy(t *testing.T) {
 	}
 }
 
+func TestOrElse(t *testing.T) {
+	result := Some(1).OrElse(Some(2))
+	expectSome(t, result)
+
+	value := result.DefaultValue(0)
+	if value != 1 {
+		t.Error("OrElse should preserve existing Some value")
+	}
+
+	result = None[int]().OrElse(Some(2))
+	expectSome(t, result)
+
+	value = result.DefaultValue(0)
+	if value != 2 {
+		t.Error("OrElse should return fallback when None")
+	}
+
+	expectNone(t, None[int]().OrElse(None[int]()))
+}
+
+func TestOrElseWith(t *testing.T) {
+	called := false
+
+	result := Some(1).OrElseWith(func() Option[int] {
+		called = true
+		return Some(2)
+	})
+
+	expectSome(t, result)
+
+	if called {
+		t.Error("OrElseWith should not invoke fallback when Some")
+	}
+
+	value := result.DefaultValue(0)
+	if value != 1 {
+		t.Error("OrElseWith should preserve existing Some value")
+	}
+
+	result = None[int]().OrElseWith(func() Option[int] {
+		called = true
+		return Some(2)
+	})
+
+	expectSome(t, result)
+
+	if !called {
+		t.Error("OrElseWith should invoke fallback when None")
+	}
+
+	value = result.DefaultValue(0)
+	if value != 2 {
+		t.Error("OrElseWith should return fallback value")
+	}
+}
+
+func TestTap(t *testing.T) {
+	state := 0
+
+	o := None[int]().Tap(func(n int) {
+		state = n
+	})
+
+	expectNone(t, o)
+
+	if state != 0 {
+		t.Error("Tap should not invoke callback for None")
+	}
+
+	o = Some(42).Tap(func(n int) {
+		state = n
+	})
+
+	expectSome(t, o)
+
+	if state != 42 {
+		t.Error("Tap should invoke callback with Some value")
+	}
+}
+
+func TestFilter(t *testing.T) {
+	result := Some(10).Filter(func(n int) bool {
+		return n > 5
+	})
+
+	expectSome(t, result)
+
+	value := result.DefaultValue(0)
+	if value != 10 {
+		t.Error("Filter should preserve value when predicate matches")
+	}
+
+	result = Some(3).Filter(func(n int) bool {
+		return n > 5
+	})
+
+	expectNone(t, result)
+
+	called := false
+
+	result = None[int]().Filter(func(n int) bool {
+		called = true
+		return true
+	})
+
+	expectNone(t, result)
+
+	if called {
+		t.Error("Filter should not invoke predicate for None")
+	}
+}
+
 func TestMatch(t *testing.T) {
 	if Match(None[string](),
 		func(x string) bool { return true },
@@ -154,25 +250,6 @@ func TestMatch(t *testing.T) {
 		func(x string) bool { return false },
 		func() bool { return true }) {
 		t.Error("Should not have invoked Some branch in match")
-	}
-}
-
-func TestDo(t *testing.T) {
-	state := 0
-	Do(None[string](),
-		func(x string) { state = 1 },
-		func() {})
-
-	if state == 1 {
-		t.Error("Should not have invoked Some branch in do")
-	}
-
-	Do(Some[string]("danom"),
-		func(x string) {},
-		func() { state = 2 })
-
-	if state == 2 {
-		t.Error("Should not have invoked Some branch in do")
 	}
 }
 
@@ -244,83 +321,22 @@ func TestApply(t *testing.T) {
 	}
 }
 
-func TestOrElse(t *testing.T) {
-	result := OrElse(Some(1), Some(2))
-	expectSome(t, result)
-
-	value := result.DefaultValue(0)
-	if value != 1 {
-		t.Error("OrElse should preserve existing Some value")
-	}
-
-	result = OrElse(None[int](), Some(2))
-	expectSome(t, result)
-
-	value = result.DefaultValue(0)
-	if value != 2 {
-		t.Error("OrElse should return fallback when None")
-	}
-
-	expectNone(t, OrElse(None[int](), None[int]()))
-}
-
-func TestOrElseWith(t *testing.T) {
-	called := false
-
-	result := OrElseWith(Some(1), func() Option[int] {
-		called = true
-		return Some(2)
-	})
-
-	expectSome(t, result)
-
-	if called {
-		t.Error("OrElseWith should not invoke fallback when Some")
-	}
-
-	value := result.DefaultValue(0)
-	if value != 1 {
-		t.Error("OrElseWith should preserve existing Some value")
-	}
-
-	result = OrElseWith(None[int](), func() Option[int] {
-		called = true
-		return Some(2)
-	})
-
-	expectSome(t, result)
-
-	if !called {
-		t.Error("OrElseWith should invoke fallback when None")
-	}
-
-	value = result.DefaultValue(0)
-	if value != 2 {
-		t.Error("OrElseWith should return fallback value")
-	}
-}
-
-func TestTap(t *testing.T) {
+func TestDo(t *testing.T) {
 	state := 0
+	Do(None[string](),
+		func(x string) { state = 1 },
+		func() {})
 
-	o := Tap(None[int](), func(n int) {
-		state = n
-	})
-
-	expectNone(t, o)
-
-	if state != 0 {
-		t.Error("Tap should not invoke callback for None")
+	if state == 1 {
+		t.Error("Should not have invoked Some branch in do")
 	}
 
-	o = Tap(Some(42), func(n int) {
-		state = n
-	})
+	Do(Some[string]("danom"),
+		func(x string) {},
+		func() { state = 2 })
 
-	expectSome(t, o)
-
-	if state != 42 {
-		t.Error("Tap should invoke callback with Some value")
+	if state == 2 {
+		t.Error("Should not have invoked Some branch in do")
 	}
 }
 
@@ -344,40 +360,8 @@ func TestIter(t *testing.T) {
 	}
 }
 
-func TestFilter(t *testing.T) {
-	result := Filter(Some(10), func(n int) bool {
-		return n > 5
-	})
-
-	expectSome(t, result)
-
-	value := result.DefaultValue(0)
-	if value != 10 {
-		t.Error("Filter should preserve value when predicate matches")
-	}
-
-	result = Filter(Some(3), func(n int) bool {
-		return n > 5
-	})
-
-	expectNone(t, result)
-
-	called := false
-
-	result = Filter(None[int](), func(n int) bool {
-		called = true
-		return true
-	})
-
-	expectNone(t, result)
-
-	if called {
-		t.Error("Filter should not invoke predicate for None")
-	}
-}
-
 func TestFilterPreservesZeroValue(t *testing.T) {
-	result := Filter(Some(0), func(n int) bool {
+	result := Some(0).Filter(func(n int) bool {
 		return true
 	})
 

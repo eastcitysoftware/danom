@@ -526,14 +526,14 @@ func MapNotContains[K comparable, V any](key K) Fact[map[K]V] {
 // Some succeeds when an Option contains a value.
 func Some[T any]() Fact[option.Option[T]] {
 	return NewFact[option.Option[T]](
-		option.IsSome,
+		func(o option.Option[T]) bool { return o.IsSome() },
 		NewMessage("'%s' should have a value"))
 }
 
 // None succeeds when an Option has no value.
 func None[T any]() Fact[option.Option[T]] {
 	return NewFact[option.Option[T]](
-		option.IsNone,
+		func(o option.Option[T]) bool { return o.IsNone() },
 		NewMessage("'%s' should have no value"))
 }
 

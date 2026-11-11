@@ -4,6 +4,52 @@ import (
 	"testing"
 )
 
+func TestOk(t *testing.T) {
+	expectOk(t, Ok[uint8, byte](1))
+	expectOk(t, Ok[uint16, byte](1))
+	expectOk(t, Ok[uint32, byte](1))
+	expectOk(t, Ok[uint64, byte](1))
+	expectOk(t, Ok[int8, byte](1))
+	expectOk(t, Ok[int16, byte](1))
+	expectOk(t, Ok[int32, byte](1))
+	expectOk(t, Ok[int64, byte](1))
+	expectOk(t, Ok[float32, byte](1))
+	expectOk(t, Ok[float64, byte](1))
+	expectOk(t, Ok[complex64, byte](1))
+	expectOk(t, Ok[complex128, byte](1))
+	expectOk(t, Ok[byte, byte](1))
+	expectOk(t, Ok[rune, byte]('d'))
+	expectOk(t, Ok[string, byte]("danom"))
+	// expectOk(t, Ok[struct{ name string }, byte](struct{name: "danom"}))
+}
+
+func TestError(t *testing.T) {
+	expectError(t, Error[uint8, byte](0))
+	expectError(t, Error[uint16, byte](0))
+	expectError(t, Error[uint32, byte](0))
+	expectError(t, Error[uint64, byte](0))
+	expectError(t, Error[int8, byte](0))
+	expectError(t, Error[int16, byte](0))
+	expectError(t, Error[int32, byte](0))
+	expectError(t, Error[int64, byte](0))
+	expectError(t, Error[float32, byte](0))
+	expectError(t, Error[float64, byte](0))
+	expectError(t, Error[complex64, byte](0))
+	expectError(t, Error[complex128, byte](0))
+	expectError(t, Error[byte, byte](0))
+	expectError(t, Error[rune, byte](0))
+	expectError(t, Error[string, byte](0))
+	// expectOk(t, Ok[struct{}, byte](struct{name: "danom"}))
+}
+
+// func TestOk(t *testing.T) {
+// 	expectOk(t, Ok[int, string](1))
+// }
+
+// func TestError(t *testing.T) {
+// 	expectError(t, Error[int, string]("danom"))
+// }
+
 func TestIsOk(t *testing.T) {
 	if !Ok[int, string](1).IsOk() {
 		t.Error("Expected Ok got Error")
@@ -36,12 +82,159 @@ func TestErrorValue(t *testing.T) {
 	}
 }
 
-func TestOk(t *testing.T) {
-	expectOk(t, Ok[int, string](1))
+func TestDefaultValue(t *testing.T) {
+	value := Ok[int, byte](1).DefaultValue(0)
+	if value != 1 {
+		t.Error("Default value should not have been used")
+	}
+
+	value = Error[int, byte](0).DefaultValue(1)
+
+	if value != 1 {
+		t.Error("Default value should have been used")
+	}
 }
 
-func TestError(t *testing.T) {
-	expectError(t, Error[int, string]("danom"))
+func TestDefaultWith(t *testing.T) {
+	value := Ok[int, byte](1).DefaultWith(func() int { return 0 })
+	if value != 1 {
+		t.Error("Default value should not have been used")
+	}
+
+	value = Error[int, byte](0).DefaultWith(func() int { return 1 })
+
+	if value != 1 {
+		t.Error("Default value should have been used")
+	}
+}
+
+func TestDefaultWithLazy(t *testing.T) {
+	called := false
+
+	value := Ok[int, byte](1).DefaultWith(func() int {
+		called = true
+		return 2
+	})
+
+	if called {
+		t.Error("DefaultWith should not invoke fallback when Ok")
+	}
+
+	if value != 1 {
+		t.Error("Expected original value")
+	}
+}
+
+func TestOrElse(t *testing.T) {
+	result := Ok[int, string](1).OrElse(Ok[int, string](2))
+	expectOk(t, result)
+
+	value := result.DefaultValue(0)
+	if value != 1 {
+		t.Error("OrElse should preserve existing Ok value")
+	}
+
+	result = Error[int, string]("danom").OrElse(Ok[int, string](2))
+	expectOk(t, result)
+
+	value = result.DefaultValue(0)
+	if value != 2 {
+		t.Error("OrElse should return fallback when Error")
+	}
+
+	expectError(t, Error[int, string]("danom").OrElse(Error[int, string]("here")))
+}
+
+func TestOrElseWith(t *testing.T) {
+	called := false
+
+	result := Ok[int, string](1).OrElseWith(func() Result[int, string] {
+		called = true
+		return Ok[int, string](2)
+	})
+
+	expectOk(t, result)
+
+	if called {
+		t.Error("OrElseWith should not invoke fallback when Ok")
+	}
+
+	value := result.DefaultValue(0)
+	if value != 1 {
+		t.Error("OrElseWith should preserve existing Ok value")
+	}
+
+	result = Error[int, string]("danom").OrElseWith(func() Result[int, string] {
+		called = true
+		return Ok[int, string](2)
+	})
+
+	expectOk(t, result)
+
+	if !called {
+		t.Error("OrElseWith should invoke fallback when Error")
+	}
+
+	value = result.DefaultValue(0)
+	if value != 2 {
+		t.Error("OrElseWith should return fallback value")
+	}
+}
+
+func TestTap(t *testing.T) {
+	state := 0
+
+	o := Error[int, string]("danom").Tap(func(n int) {
+		state = n
+	})
+
+	expectError(t, o)
+
+	if state != 0 {
+		t.Error("Tap should not invoke callback for Error")
+	}
+
+	o = Ok[int, string](1).Tap(func(n int) {
+		state = n
+	})
+
+	expectOk(t, o)
+
+	if state != 1 {
+		t.Error("Tap should invoke callback with Ok value")
+	}
+}
+
+func TestFilter(t *testing.T) {
+	result := Ok[int, byte](10).Filter(func(n int) bool {
+		return n > 5
+	}, 0)
+
+	expectOk(t, result)
+
+	value := result.DefaultValue(0)
+	if value != 10 {
+		t.Error("Filter should preserve value when predicate matches")
+	}
+
+	result = Ok[int, byte](3).Filter(func(n int) bool {
+		return n > 5
+	}, 0)
+
+	expectError(t, result)
+
+	called := false
+
+	result = Error[int, byte](0).Filter(func(n int) bool {
+		called = true
+		return true
+	}, 1)
+
+	expectError(t, result)
+
+	if called {
+		t.Error("Filter should not invoke predicate for Error")
+	}
 }
 
 func TestMatch(t *testing.T) {
@@ -55,25 +248,6 @@ func TestMatch(t *testing.T) {
 		func(x int) bool { return true },
 		func(e string) bool { return false }) {
 		t.Error("Should not have invoked Ok branch in match")
-	}
-}
-
-func TestDo(t *testing.T) {
-	state := 0
-	Do(Ok[int, string](1),
-		func(x int) { state = 1 },
-		func(e string) { state = 0 })
-
-	if state != 1 {
-		t.Error("Should not have invoked Error branch in do")
-	}
-
-	Do(Error[int, string]("danom"),
-		func(x int) { state = 0 },
-		func(e string) { state = 2 })
-
-	if state != 2 {
-		t.Error("Should not have invoked Ok branch in do")
 	}
 }
 
@@ -125,83 +299,22 @@ func TestApply(t *testing.T) {
 	}
 }
 
-func TestOrElse(t *testing.T) {
-	result := OrElse(Ok[int, string](1), Ok[int, string](2))
-	expectOk(t, result)
-
-	value := result.DefaultValue(0)
-	if value != 1 {
-		t.Error("OrElse should preserve existing Ok value")
-	}
-
-	result = OrElse(Error[int, string]("danom"), Ok[int, string](2))
-	expectOk(t, result)
-
-	value = result.DefaultValue(0)
-	if value != 2 {
-		t.Error("OrElse should return fallback when Error")
-	}
-
-	expectError(t, OrElse(Error[int, string]("danom"), Error[int, string]("here")))
-}
-
-func TestOrElseWith(t *testing.T) {
-	called := false
-
-	result := OrElseWith(Ok[int, string](1), func() Result[int, string] {
-		called = true
-		return Ok[int, string](2)
-	})
-
-	expectOk(t, result)
-
-	if called {
-		t.Error("OrElseWith should not invoke fallback when Ok")
-	}
-
-	value := result.DefaultValue(0)
-	if value != 1 {
-		t.Error("OrElseWith should preserve existing Ok value")
-	}
-
-	result = OrElseWith(Error[int, string]("danom"), func() Result[int, string] {
-		called = true
-		return Ok[int, string](2)
-	})
-
-	expectOk(t, result)
-
-	if !called {
-		t.Error("OrElseWith should invoke fallback when Error")
-	}
-
-	value = result.DefaultValue(0)
-	if value != 2 {
-		t.Error("OrElseWith should return fallback value")
-	}
-}
-
-func TestTap(t *testing.T) {
+func TestDo(t *testing.T) {
 	state := 0
-
-	o := Tap(Error[int, string]("danom"), func(n int) {
-		state = n
-	})
-
-	expectError(t, o)
-
-	if state != 0 {
-		t.Error("Tap should not invoke callback for Error")
-	}
-
-	o = Tap(Ok[int, string](1), func(n int) {
-		state = n
-	})
-
-	expectOk(t, o)
+	Do(Ok[int, string](1),
+		func(x int) { state = 1 },
+		func(e string) { state = 0 })
 
 	if state != 1 {
-		t.Error("Tap should invoke callback with Ok value")
+		t.Error("Should not have invoked Error branch in do")
+	}
+
+	Do(Error[int, string]("danom"),
+		func(x int) { state = 0 },
+		func(e string) { state = 2 })
+
+	if state != 2 {
+		t.Error("Should not have invoked Ok branch in do")
 	}
 }
 

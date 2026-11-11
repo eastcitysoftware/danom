@@ -3,25 +3,30 @@
 // matching, mapping, and binding over it.
 package option
 
-const (
-	none uint8 = iota
-	some uint8 = 1
-)
-
 // Option represents a value that may or may not be present.
 type Option[T any] struct {
-	state uint8
+	some  bool
 	value T
+}
+
+// Some creates an Option that contains val.
+func Some[T any](val T) Option[T] {
+	return Option[T]{some: true, value: val}
+}
+
+// None creates an Option with no value.
+func None[T any]() Option[T] {
+	return Option[T]{some: false}
 }
 
 // IsSome reports whether the Option contains a value.
 func (o Option[T]) IsSome() bool {
-	return o.state == some
+	return o.some == true
 }
 
 // IsNone reports whether the Option has no value.
 func (o Option[T]) IsNone() bool {
-	return o.state == none
+	return o.some == false
 }
 
 // Value returns the value and true when the Option is Some.
@@ -51,24 +56,37 @@ func (o Option[T]) DefaultWith(fn func() T) T {
 	return fn()
 }
 
-// IsSome reports whether o contains a value.
-func IsSome[T any](o Option[T]) bool {
-	return o.IsSome()
+// OrElse returns o when it is Some, or ifNone otherwise.
+func (o Option[T]) OrElse(ifNone Option[T]) Option[T] {
+	if o.IsNone() {
+		return ifNone
+	}
+	return o
 }
 
-// IsNone reports whether o has no value.
-func IsNone[T any](o Option[T]) bool {
-	return o.IsNone()
+// OrElseWith returns o when it is Some, or calls ifNone otherwise.
+func (o Option[T]) OrElseWith(ifNone func() Option[T]) Option[T] {
+	if o.IsNone() {
+		return ifNone()
+	}
+	return o
 }
 
-// Some creates an Option that contains val.
-func Some[T any](val T) Option[T] {
-	return Option[T]{state: some, value: val}
+// Tap calls fn with the value when o is Some, then returns o unchanged.
+func (o Option[T]) Tap(fn func(T)) Option[T] {
+	if value, ok := o.Value(); ok {
+		fn(value)
+	}
+
+	return o
 }
 
-// None creates an Option with no value.
-func None[T any]() Option[T] {
-	return Option[T]{state: none}
+// Filter returns o when it is Some and its value satisfies pred; otherwise it returns None.
+func (o Option[T]) Filter(pred func(T) bool) Option[T] {
+	if value, ok := o.Value(); ok && pred(value) {
+		return Some(value)
+	}
+	return None[T]()
 }
 
 // Match calls some with the value when o is Some, or calls none otherwise.
@@ -80,15 +98,6 @@ func Match[T any, U any](o Option[T], some func(T) U, none func() U) U {
 	return none()
 }
 
-// Do calls the handler for the state of o.
-func Do[T any](o Option[T], some func(T), none func()) {
-	if o.IsSome() {
-		some(o.value)
-	} else {
-		none()
-	}
-}
-
 // Bind applies fn to the value in o, or returns None when o is None.
 func Bind[T any, U any](o Option[T], fn func(T) Option[U]) Option[U] {
 	return Match(o, fn, None[U])
@@ -96,8 +105,8 @@ func Bind[T any, U any](o Option[T], fn func(T) Option[U]) Option[U] {
 
 // Map transforms the value in o, or returns None when o is None.
 func Map[T any, U any](o Option[T], fn func(T) U) Option[U] {
-	return Bind(o, func(x T) Option[U] {
-		return Some(fn(x))
+	return Bind(o, func(t T) Option[U] {
+		return Some(fn(t))
 	})
 }
 
@@ -108,40 +117,27 @@ func Apply[T any, U any](o Option[T], fn Option[func(T) U]) Option[U] {
 	})
 }
 
-// OrElse returns o when it is Some, or ifNone otherwise.
-func OrElse[T any](o Option[T], ifNone Option[T]) Option[T] {
-	return Match(o, Some, func() Option[T] { return ifNone })
+// Flatten converts a nested Option into a single Option.
+func Flatten[T any](o Option[Option[T]]) Option[T] {
+	if value, ok := o.Value(); ok {
+		return value
+	}
+
+	return None[T]()
 }
 
-// OrElseWith returns o when it is Some, or calls ifNone otherwise.
-func OrElseWith[T any](o Option[T], ifNone func() Option[T]) Option[T] {
-	return Match(o, Some, ifNone)
-}
-
-// Tap calls fn with the value when o is Some, then returns o unchanged.
-func Tap[T any](o Option[T], fn func(T)) Option[T] {
-	return Map(o, func(t T) T {
-		fn(t)
-		return t
-	})
+// Do calls the handler for the state of o.
+func Do[T any](o Option[T], some func(T), none func()) {
+	if value, ok := o.Value(); ok {
+		some(value)
+	} else {
+		none()
+	}
 }
 
 // Iter calls fn with the value when o is Some.
 func Iter[T any](o Option[T], fn func(T)) {
-	Do(o, fn, func() {})
-}
-
-// Filter returns o when it is Some and its value satisfies pred; otherwise it returns None.
-func Filter[T any](o Option[T], pred func(T) bool) Option[T] {
-	if value, ok := o.Value(); ok && pred(value) {
-		return Some(value)
+	if value, ok := o.Value(); ok {
+		fn(value)
 	}
-	return None[T]()
-}
-
-// Flatten converts a nested Option into a single Option.
-func Flatten[T any](o Option[Option[T]]) Option[T] {
-	return Bind(o, func(inner Option[T]) Option[T] {
-		return inner
-	})
 }
