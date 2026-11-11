@@ -196,13 +196,13 @@ func TestTap(t *testing.T) {
 		t.Error("Tap should not invoke callback for None")
 	}
 
-	o = Some(42).Tap(func(n int) {
+	o = Some(86).Tap(func(n int) {
 		state = n
 	})
 
 	expectSome(t, o)
 
-	if state != 42 {
+	if state != 86 {
 		t.Error("Tap should invoke callback with Some value")
 	}
 }
@@ -351,11 +351,11 @@ func TestIter(t *testing.T) {
 		t.Error("Iter should not invoke callback for None")
 	}
 
-	Iter(Some(42), func(n int) {
+	Iter(Some(86), func(n int) {
 		state = n
 	})
 
-	if state != 42 {
+	if state != 86 {
 		t.Error("Iter should invoke callback with Some value")
 	}
 }

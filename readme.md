@@ -111,7 +111,7 @@ import (
 )
 
 func main() {
-    parsed := parse.Int32("42")
+    parsed := parse.Int32("86")
     if value, ok := parsed.Value(); ok {
         fmt.Println(value)
     }
