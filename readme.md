@@ -2,12 +2,13 @@
 
 [![build](https://github.com/eastcitysoftware/danom/actions/workflows/build.yml/badge.svg)](https://github.com/eastcitysoftware/danom/actions/workflows/build.yml)
 
-danom provides generic `Option` and `Result` types, along with composable validation, for Go. It offers a type-safe way to represent optional values and expected errors, with functions for matching and transforming them.
+danom provides generic `Option` and `Result` types, string parsing and conversion helpers, and composable validation for Go. It offers a type-safe way to represent optional values and expected errors, with functions for matching and transforming them.
 
 ## Key Features
 
 - `option.Option[T]` makes the presence or absence of a value explicit.
 - `result.Result[T, E]` represents a successful value or a typed error.
+- `parse` returns standard-library parsing results as `Result` values; `convert` exposes the same conversions as `Option` values.
 - `Map`, `Bind`, `Match`, and related helpers compose transformations and handle each case.
 - `check` provides reusable validation rules, composable facts, and collected errors.
 
@@ -19,7 +20,7 @@ Install the module with Go:
 go get github.com/eastcitysoftware/danom
 ```
 
-danom requires Go 1.25.0 or later. Import only the packages you need: `option`, `result`, and `check` are separate packages. See the [API reference](api.md) for the complete list of types, functions, and built-in validation facts.
+danom requires Go 1.25.0 or later. Import only the packages you need: `option`, `result`, `parse`, `convert`, and `check` are separate packages. See the [API reference](reference.md) for the complete list of types, functions, and built-in validation facts.
 
 ## Option
 
@@ -95,6 +96,46 @@ func main() {
 `Value` and `ErrorValue` return a value and a boolean for conventional branching; `Match` and `Do` handle both cases through callbacks. `result.Map` transforms only a success, and `result.Bind` chains an operation that can also fail. `MapError` transforms only the error, which is useful when adapting one error type to another.
 
 `OrElse` and `OrElseWith` provide alternate results on failure; `DefaultValue` and `DefaultWith` extract a success or use a fallback value. Use these when discarding or recovering from the error is intentional. `Result` does not replace Go's `error` interface: use `E = error` when you want standard error wrapping and inspection.
+
+## Parsing and conversion
+
+The `parse` package wraps Go's standard parsing functions for booleans, numeric and complex values, durations, and times. Each function returns a `result.Result[T, error]`, preserving the parse error when the input is invalid. For example:
+
+```go
+package main
+
+import (
+    "fmt"
+
+    "github.com/eastcitysoftware/danom/parse"
+)
+
+func main() {
+    parsed := parse.Int32("42")
+    if value, ok := parsed.Value(); ok {
+        fmt.Println(value)
+    }
+}
+```
+
+The `convert` package provides matching functions that return `option.Option[T]` instead. A valid input produces `Some(value)`; invalid input produces `None`, which is useful when the parse error itself is not needed:
+
+```go
+package main
+
+import (
+    "fmt"
+
+    "github.com/eastcitysoftware/danom/convert"
+)
+
+func main() {
+    port := convert.Uint16("8080")
+    fmt.Println(port.DefaultValue(0))
+}
+```
+
+Both packages provide functions for `Bool`, `Float32`, `Float64`, `Int8`, `Int16`, `Int32`, `Int64`, `Uint8`, `Uint16`, `Uint32`, `Uint64`, `Complex64`, `Complex128`, `Duration`, `Time`, and `TimeRFC3339`. `Time` accepts a Go time layout; `TimeRFC3339` uses the RFC3339 layout.
 
 ## Validation
 

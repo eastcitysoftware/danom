@@ -1,11 +1,13 @@
 # Danom API Reference
 
-Danom is organized into packages for optional values, success-or-error results, and validation.
+Danom is organized into packages for optional values, success-or-error results, parsing, conversion, and validation.
 
 ## Packages
 
 - [`option`](#option) — optional values.
 - [`result`](#result) — success or error outcomes.
+- [`parse`](#parse) — parsing strings into values with errors.
+- [`convert`](#convert) — parsing strings into optional values.
 - [`check`](#check) — validation rules, facts, and errors.
 
 ## `option`
@@ -27,23 +29,21 @@ type Option[T any] struct { /* unexported fields */ }
 - `func (o Option[T]) Value() (T, bool)` returns the value and `true` when `o` is `Some`; otherwise returns the zero value and `false`.
 - `func (o Option[T]) DefaultValue(d T) T` returns the value or `d` when `o` is `None`.
 - `func (o Option[T]) DefaultWith(fn func() T) T` returns the value or calls `fn` when `o` is `None`.
+- `func (o Option[T]) OrElse(ifNone Option[T]) Option[T]` returns `o` when it is `Some`, or `ifNone` otherwise.
+- `func (o Option[T]) OrElseWith(ifNone func() Option[T]) Option[T]` returns `o` when it is `Some`, or calls `ifNone` otherwise.
+- `func (o Option[T]) Tap(fn func(T)) Option[T]` calls `fn` with the value when `o` is `Some`, then returns `o`.
+- `func (o Option[T]) Filter(pred func(T) bool) Option[T]` returns `o` when its value satisfies `pred`, or `None` otherwise.
 
 ### Functions
 
 - `func Some[T any](val T) Option[T]` creates an `Option` containing `val`.
 - `func None[T any]() Option[T]` creates an `Option` with no value.
-- `func IsSome[T any](o Option[T]) bool` reports whether `o` contains a value.
-- `func IsNone[T any](o Option[T]) bool` reports whether `o` has no value.
 - `func Match[T any, U any](o Option[T], some func(T) U, none func() U) U` calls the handler for the state of `o` and returns its result.
 - `func Do[T any](o Option[T], some func(T), none func())` calls the handler for the state of `o`.
 - `func Bind[T any, U any](o Option[T], fn func(T) Option[U]) Option[U]` applies `fn` to the value, or returns `None`.
 - `func Map[T any, U any](o Option[T], fn func(T) U) Option[U]` transforms the value, or returns `None`.
 - `func Apply[T any, U any](o Option[T], fn Option[func(T) U]) Option[U]` applies an optional function to an optional value.
-- `func OrElse[T any](o Option[T], ifNone Option[T]) Option[T]` returns `o` when it is `Some`, or `ifNone` otherwise.
-- `func OrElseWith[T any](o Option[T], ifNone func() Option[T]) Option[T]` returns `o` when it is `Some`, or calls `ifNone` otherwise.
-- `func Tap[T any](o Option[T], fn func(T)) Option[T]` calls `fn` for a present value and returns `o`.
 - `func Iter[T any](o Option[T], fn func(T))` calls `fn` when `o` is `Some`.
-- `func Filter[T any](o Option[T], pred func(T) bool) Option[T]` returns `o` only when its value satisfies `pred`.
 - `func Flatten[T any](o Option[Option[T]]) Option[T]` converts a nested `Option` into one `Option`.
 
 ## `result`
@@ -66,6 +66,10 @@ type Result[T any, E any] struct { /* unexported fields */ }
 - `func (r Result[T, E]) ErrorValue() (E, bool)` returns the error value and `true` when `r` is an `Error`; otherwise returns the zero value and `false`.
 - `func (r Result[T, E]) DefaultValue(d T) T` returns the success value or `d` when `r` is an `Error`.
 - `func (r Result[T, E]) DefaultWith(fn func() T) T` returns the success value or calls `fn` when `r` is an `Error`.
+- `func (r Result[T, E]) OrElse(ifError Result[T, E]) Result[T, E]` returns `r` when it is `Ok`, or `ifError` otherwise.
+- `func (r Result[T, E]) OrElseWith(ifError func() Result[T, E]) Result[T, E]` returns `r` when it is `Ok`, or calls `ifError` otherwise.
+- `func (r Result[T, E]) Tap(fn func(T)) Result[T, E]` calls `fn` with the success value, then returns `r`.
+- `func (r Result[T, E]) Filter(pred func(T) bool, ifError E) Result[T, E]` preserves an existing error; for an `Ok`, it preserves the value when `pred` is true or returns an error containing `ifError`.
 
 ### Functions
 
@@ -77,10 +81,58 @@ type Result[T any, E any] struct { /* unexported fields */ }
 - `func Map[T any, E any, U any](r Result[T, E], fn func(T) U) Result[U, E]` transforms the success value, or preserves the error.
 - `func MapError[T any, E any, U any](r Result[T, E], fn func(E) U) Result[T, U]` transforms the error value, or preserves the success value.
 - `func Apply[T any, E any, U any](r Result[T, E], fn Result[func(T) U, E]) Result[U, E]` applies a successful function to a successful value.
-- `func OrElse[T any, E any](r Result[T, E], ifError Result[T, E]) Result[T, E]` returns `r` when it is `Ok`, or `ifError` otherwise.
-- `func OrElseWith[T any, E any](r Result[T, E], ifError func() Result[T, E]) Result[T, E]` returns `r` when it is `Ok`, or calls `ifError` otherwise.
-- `func Tap[T any, E any](r Result[T, E], fn func(T)) Result[T, E]` calls `fn` for a success value and returns `r`.
 - `func Iter[T any, E any](r Result[T, E], fn func(T))` calls `fn` when `r` is `Ok`.
+- `func Flatten[T any, E any](r Result[Result[T, E], E]) Result[T, E]` converts a nested `Result` into a single `Result`.
+
+## `parse`
+
+Import path: `github.com/eastcitysoftware/danom/parse`
+
+The parsing functions wrap Go's standard library parsers and return `result.Result[T, error]`. Invalid input is returned as an error value.
+
+### Functions
+
+- `func Bool(x string) result.Result[bool, error]`
+- `func Float32(x string) result.Result[float32, error]`
+- `func Float64(x string) result.Result[float64, error]`
+- `func Int8(x string) result.Result[int8, error]`
+- `func Int16(x string) result.Result[int16, error]`
+- `func Int32(x string) result.Result[int32, error]`
+- `func Int64(x string) result.Result[int64, error]`
+- `func Uint8(x string) result.Result[uint8, error]`
+- `func Uint16(x string) result.Result[uint16, error]`
+- `func Uint32(x string) result.Result[uint32, error]`
+- `func Uint64(x string) result.Result[uint64, error]`
+- `func Complex64(x string) result.Result[complex64, error]`
+- `func Complex128(x string) result.Result[complex128, error]`
+- `func Duration(x string) result.Result[time.Duration, error]`
+- `func Time(x string, layout string) result.Result[time.Time, error]` parses using a Go time layout.
+- `func TimeRFC3339(x string) result.Result[time.Time, error]` parses using the RFC3339 layout.
+
+## `convert`
+
+Import path: `github.com/eastcitysoftware/danom/convert`
+
+The conversion functions use the corresponding `parse` function and return `option.Option[T]`. Valid input produces `Some(value)`; invalid input produces `None`, discarding the parse error.
+
+### Functions
+
+- `func Bool(x string) option.Option[bool]`
+- `func Float32(x string) option.Option[float32]`
+- `func Float64(x string) option.Option[float64]`
+- `func Int8(x string) option.Option[int8]`
+- `func Int16(x string) option.Option[int16]`
+- `func Int32(x string) option.Option[int32]`
+- `func Int64(x string) option.Option[int64]`
+- `func Uint8(x string) option.Option[uint8]`
+- `func Uint16(x string) option.Option[uint16]`
+- `func Uint32(x string) option.Option[uint32]`
+- `func Uint64(x string) option.Option[uint64]`
+- `func Complex64(x string) option.Option[complex64]`
+- `func Complex128(x string) option.Option[complex128]`
+- `func Duration(x string) option.Option[time.Duration]`
+- `func Time(x string, layout string) option.Option[time.Time]` parses using a Go time layout.
+- `func TimeRFC3339(x string) option.Option[time.Time]` parses using the RFC3339 layout.
 
 ## `check`
 
