@@ -26,18 +26,6 @@ danom requires Go 1.25.0 or later. Import only the packages you need: `option`, 
 
 Use `Option[T]` when a value may legitimately be absent, for example, a lookup that might not find a record. This keeps absence distinct from a type's zero value. `option.Some(value)` represents a present value even when `value` is nil; `option.None[T]()` represents no value. The zero value of `Option[T]` is also `None`.
 
-`Option[T]` supports Go's `encoding/json`: `Some(value)` is encoded as the JSON value, and `None` as `null`. Decoding `null` produces `None`. Consequently, `Some(nil)` also encodes as `null` and decodes as `None`, so that distinction cannot be preserved through JSON. For struct fields, use the `omitzero` tag to omit `None` instead of encoding it as `null`:
-
-```go
-import "github.com/eastcitysoftware/danom/option"
-
-type User struct {
-    Nickname option.Option[string] `json:"nickname,omitzero"`
-}
-```
-
-`IsZero` reports true only for `None`, so `Some` containing a zero value is retained. The `omitzero` tag omits absent fields; without it, `None` is emitted as `null`.
-
 Use `Value` when ordinary Go control flow is clearest, or `Match` when both cases should produce the same result type:
 
 ```go
@@ -66,6 +54,19 @@ func main() {
 `option.Map` transforms a present value and leaves `None` absent. Use `option.Bind` when the transformation already returns an `Option`, so you don't end up with a nested `Option[Option[T]]`. `Filter` keeps a present value only when a predicate succeeds; `Flatten` removes one layer of nesting.
 
 When you need a fallback, `DefaultValue` uses a value you already have, while `DefaultWith` computes one only if the option is `None`. `OrElse` and `OrElseWith` provide the corresponding fallback as another `Option`. `Tap` and `Iter` let you perform an action for a present value without changing the value.
+
+
+`Option[T]` supports Go's `encoding/json`: `Some(value)` is encoded as the JSON value, and `None` as `null`. Decoding `null` produces `None`. Consequently, `Some(nil)` also encodes as `null` and decodes as `None`, so that distinction cannot be preserved through JSON. For struct fields, use the `omitzero` tag to omit `None` instead of encoding it as `null`:
+
+```go
+import "github.com/eastcitysoftware/danom/option"
+
+type User struct {
+    Nickname option.Option[string] `json:"nickname,omitzero"`
+}
+```
+
+`IsZero` reports true only for `None`, so `Some` containing a zero value is retained. The `omitzero` tag omits absent fields; without it, `None` is emitted as `null`.
 
 ## Result
 
@@ -123,10 +124,13 @@ import (
 )
 
 func main() {
-    parsed := parse.Int32("86")
-    if value, ok := parsed.Value(); ok {
-        fmt.Println(value)
-    }
+    result.Do(parse.Int("86"),
+        func(n int) { fmt.Println(n) },
+        func(e error) { fmt.Println(e) })
+
+    option.Do(convert.Int("86"),
+        func(n int) { fmt.Println(n) },
+        func() { fmt.Println("none") })
 }
 ```
 
@@ -188,7 +192,7 @@ func main() {
 
 Create a `Rule` with `NewRule(name, selector, facts...)`, then pass one or more rules to `NewValidator`. Facts attached to a rule are all evaluated, so a field can report multiple reasons it is invalid. Use `When` for conditional checks, `AnyOf` when at least one fact must pass, and `NoneOf` when all listed conditions must fail.
 
-Built-in facts cover equality, booleans, numeric and ordered values, strings, slices, maps, optional values, times, and durations. For optional fields, `Required` checks that an `Option` is present and validates its value; `Optional` validates it only when present. To define a project-specific rule, use `NewFact` with a predicate and a `NewMessage` format string; the rule name is supplied as the format's first argument.
+Built-in facts cover equality, booleans, numeric and ordered values, strings, slices, maps, optional values, times, and durations. `MapAll` and `MapAny` apply a predicate to map values, requiring respectively every value or at least one value to pass. For optional fields, `Required` checks that an `Option` is present and validates its value; `Optional` validates it only when present. To define a project-specific rule, use `NewFact` with a predicate and a `NewMessage` format string; the rule name is supplied as the format's first argument.
 
 ### Custom validation facts
 
