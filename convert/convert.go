@@ -26,6 +26,11 @@ func Float64(x string) option.Option[float64] {
 	return orNone(parse.Float64(x))
 }
 
+// Int converts x to an int.
+func Int(x string) option.Option[int] {
+	return orNone(parse.Int(x))
+}
+
 // Int8 converts x to a base-10, 8-bit signed integer.
 func Int8(x string) option.Option[int8] {
 	return orNone(parse.Int8(x))
@@ -44,6 +49,11 @@ func Int32(x string) option.Option[int32] {
 // Int64 converts x to a base-10, 64-bit signed integer.
 func Int64(x string) option.Option[int64] {
 	return orNone(parse.Int64(x))
+}
+
+// Uint converts x to an unsigned int.
+func Uint(x string) option.Option[uint] {
+	return orNone(parse.Uint(x))
 }
 
 // Uint8 converts x to a base-10, 8-bit unsigned integer.
