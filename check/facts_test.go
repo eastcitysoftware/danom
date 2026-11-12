@@ -497,6 +497,20 @@ func TestMapNotContains(t *testing.T) {
 	})
 }
 
+func TestMapAll(t *testing.T) {
+	runFact(t, MapAll[string, int](MapNotEmpty[string, int](), MapContains[string, int]("a")), []factCase[map[string]int]{
+		{"all pass", map[string]int{"a": 1}, true, ""},
+		{"one fails", map[string]int{"b": 1}, false, ""},
+	})
+}
+
+func TestMapAny(t *testing.T) {
+	runFact(t, MapAny[string, int](MapContains[string, int]("a")), []factCase[map[string]int]{
+		{"any pass", map[string]int{"a": 1}, true, ""},
+		{"none pass", map[string]int{"b": 1}, false, ""},
+	})
+}
+
 func TestSome(t *testing.T) {
 	runFact(t, Some[int](), []factCase[option.Option[int]]{
 		{"some", option.Some(1), true, ""},
