@@ -37,6 +37,15 @@ func Float64(x string) result.Result[float64, error] {
 	}
 }
 
+// Int parses x as an int.
+func Int(x string) result.Result[int, error] {
+	if i, e := strconv.ParseInt(x, 10, 0); e == nil {
+		return result.Ok[int, error](int(i))
+	} else {
+		return result.Error[int](e)
+	}
+}
+
 // Int8 parses x as a base-10, 8-bit signed integer.
 func Int8(x string) result.Result[int8, error] {
 	if i, e := strconv.ParseInt(x, 10, 8); e == nil {
@@ -70,6 +79,15 @@ func Int64(x string) result.Result[int64, error] {
 		return result.Ok[int64, error](i)
 	} else {
 		return result.Error[int64](e)
+	}
+}
+
+// Uint parses x as a base-10 unsigned integer.
+func Uint(x string) result.Result[uint, error] {
+	if i, e := strconv.ParseUint(x, 10, 0); e == nil {
+		return result.Ok[uint, error](uint(i))
+	} else {
+		return result.Error[uint](e)
 	}
 }
 

@@ -1,6 +1,7 @@
 package parse
 
 import (
+	"strconv"
 	"testing"
 	"time"
 
@@ -22,6 +23,19 @@ func TestFloat32(t *testing.T) {
 func TestFloat64(t *testing.T) {
 	assertParsed(t, Float64("-1.25"), -1.25)
 	assertParseError(t, Float64("1.2.3"))
+}
+
+func TestInt(t *testing.T) {
+	assertParsed(t, Int("0"), int(0))
+	assertParsed(t, Int("42"), int(42))
+	assertParsed(t, Int("-42"), int(-42))
+
+	maxInt := int(^uint(0) >> 1)
+	minInt := -maxInt - 1
+	assertParsed(t, Int(strconv.FormatInt(int64(maxInt), 10)), maxInt)
+	assertParsed(t, Int(strconv.FormatInt(int64(minInt), 10)), minInt)
+	assertParseError(t, Int(strconv.FormatUint(uint64(maxInt)+1, 10)))
+	assertParseError(t, Int("not an int"))
 }
 
 func TestInt8(t *testing.T) {
@@ -46,6 +60,21 @@ func TestInt64(t *testing.T) {
 	assertParsed(t, Int64("-9223372036854775808"), int64(-9223372036854775808))
 	assertParsed(t, Int64("9223372036854775807"), int64(9223372036854775807))
 	assertParseError(t, Int64("9223372036854775808"))
+}
+
+func TestUint(t *testing.T) {
+	assertParsed(t, Uint("0"), uint(0))
+	assertParsed(t, Uint("42"), uint(42))
+	maxUint := ^uint(0)
+	assertParsed(t, Uint(strconv.FormatUint(uint64(maxUint), 10)), maxUint)
+	assertParseError(t, Uint("-1"))
+	assertParseError(t, Uint("not an integer"))
+
+	overflow := "18446744073709551616"
+	if uint64(maxUint) < ^uint64(0) {
+		overflow = strconv.FormatUint(uint64(maxUint)+1, 10)
+	}
+	assertParseError(t, Uint(overflow))
 }
 
 func TestUint8(t *testing.T) {
