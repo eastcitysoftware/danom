@@ -97,7 +97,8 @@ func (r Result[T, E]) Tap(fn func(T)) Result[T, E] {
 	return r
 }
 
-// Filter returns o when it is Some and its value satisfies pred; otherwise it returns None.
+// Filter returns r when it is Ok and its value satisfies pred; otherwise it returns an Error containing ifError.
+// If r is already an Error, it is returned unchanged.
 func (r Result[T, E]) Filter(pred func(T) bool, ifError E) Result[T, E] {
 	if errValue, err := r.ErrorValue(); err {
 		return Error[T](errValue)
