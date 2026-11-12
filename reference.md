@@ -217,9 +217,7 @@ These functions accept types supported by `cmp.Ordered`.
 - `func StrMatch(r *regexp.Regexp) Fact[string]` succeeds when `r` matches the string.
 - `func StrAlpha() Fact[string]` succeeds when a string contains only ASCII letters.
 - `func StrAlphanumeric() Fact[string]` succeeds when a string contains only ASCII letters and digits.
-- `func StrIsUrl() Fact[string]` succeeds when a string is an HTTP or HTTPS URL with a host.
-- `func StrIsEmail() Fact[string]` succeeds when a string matches the package's email pattern.
-- `func StrIsE164() Fact[string]` succeeds when a string matches the package's E.164 phone number pattern.
+- `func StrIsUrl() Fact[string]` succeeds when a string is an HTTP or HTTPS URL with a host; this is a structural check only.
 - `func StrIsIPV4() Fact[string]` succeeds when a string parses as an IPv4 address.
 - `func StrIsIPV6() Fact[string]` succeeds when a string parses as an IPv6 address.
 

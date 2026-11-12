@@ -178,6 +178,43 @@ Create a `Rule` with `NewRule(name, selector, facts...)`, then pass one or more 
 
 Built-in facts cover equality, booleans, numeric and ordered values, strings, slices, maps, optional values, times, and durations. For optional fields, `Required` checks that an `Option` is present and validates its value; `Optional` validates it only when present. To define a project-specific rule, use `NewFact` with a predicate and a `NewMessage` format string; the rule name is supplied as the format's first argument.
 
+### Custom validation facts
+
+Domain-specific validators—email addresses, phone numbers, or any complex format—are best owned by the code that uses them. Use `NewFact` to wrap validation logic into a composable fact:
+
+```go
+package main
+
+import (
+    "net"
+    "github.com/eastcitysoftware/danom/check"
+)
+
+type User struct {
+    IP string
+}
+
+func main() {
+    // Wrap net.ParseIP to validate IPv4 addresses strictly
+    isValidIPv4 := check.NewFact(
+        func(s string) bool {
+            ip := net.ParseIP(s)
+            return ip != nil && ip.To4() != nil
+        },
+        check.NewMessage("'%s' must be a valid IPv4 address"))
+
+    validate := check.NewValidator(
+        check.NewRule("ip", func(u User) string { return u.IP }, isValidIPv4))
+
+    outcome := validate.Validate(User{IP: "192.168.1.1"})
+    if _, ok := outcome.Value(); ok {
+        // Valid
+    }
+}
+```
+
+This pattern scales to any third-party validator: `regexp.Compile` for patterns, `libphonenumber` for E.164 numbers, or custom domain logic.
+
 On failure, `Errors` contains named `Error` values and implements Go's `error` interface, so it can be printed, returned, or handled like other errors. On success, the result contains the original input.
 
 ## Find a bug?

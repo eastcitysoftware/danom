@@ -331,25 +331,6 @@ func TestStrIsUrl(t *testing.T) {
 	})
 }
 
-func TestStrIsEmail(t *testing.T) {
-	runFact(t, StrIsEmail(), []factCase[string]{
-		{"valid", "a.b+c@example.com", true, ""},
-		{"no at", "example.com", false, "'f' is not a valid email address"},
-		{"no domain suffix", "a@example", false, ""},
-		{"empty", "", false, ""},
-	})
-}
-
-func TestStrIsE164(t *testing.T) {
-	runFact(t, StrIsE164(), []factCase[string]{
-		{"valid", "+14155552671", true, ""},
-		{"no plus", "14155552671", false, "'f' is not a valid E.164 phone number"},
-		{"leading zero", "+0415555267", false, ""},
-		{"too long", "+1234567890123456", false, ""},
-		{"letters", "+1415abc", false, ""},
-	})
-}
-
 func TestStrIsIPV4(t *testing.T) {
 	runFact(t, StrIsIPV4(), []factCase[string]{
 		{"valid", "192.168.0.1", true, ""},

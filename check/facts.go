@@ -16,8 +16,6 @@ import (
 var (
 	alphaPattern    = regexp.MustCompile("^[a-zA-Z]+$")
 	alphaNumPattern = regexp.MustCompile("^[a-zA-Z0-9]+$")
-	e164Pattern     = regexp.MustCompile(`^\+[1-9]\d{1,14}$`)
-	emailPattern    = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 )
 
 // When runs facts when cond succeeds and returns their messages.
@@ -319,6 +317,7 @@ func StrAlphanumeric() Fact[string] {
 }
 
 // StrIsUrl succeeds when a string is an HTTP or HTTPS URL with a host.
+// This is a structural check only; it does not validate that the host is reachable or valid.
 func StrIsUrl() Fact[string] {
 	return NewFact(
 		func(x string) bool {
@@ -330,18 +329,6 @@ func StrIsUrl() Fact[string] {
 			return false
 		},
 		NewMessage("'%s' is not a valid URL"))
-}
-
-// StrIsEmail succeeds when a string matches the package's email pattern.
-func StrIsEmail() Fact[string] {
-	return NewFact(emailPattern.MatchString,
-		NewMessage("'%s' is not a valid email address"))
-}
-
-// StrIsE164 succeeds when a string matches the E.164 phone number format.
-func StrIsE164() Fact[string] {
-	return NewFact(e164Pattern.MatchString,
-		NewMessage("'%s' is not a valid E.164 phone number"))
 }
 
 // StrIsIPV4 succeeds when a string is an IPv4 address.
