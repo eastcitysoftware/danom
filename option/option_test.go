@@ -373,6 +373,40 @@ func TestFilterPreservesZeroValue(t *testing.T) {
 	}
 }
 
+func TestString(t *testing.T) {
+	if Some(1).String() != "Some(1)" {
+		t.Error("String failed")
+	}
+
+	if None[int]().String() != "None" {
+		t.Error("String failed")
+	}
+
+	if Some(0).String() != "Some(0)" {
+		t.Error("String failed")
+	}
+
+	if Some("a").String() != "Some(a)" {
+		t.Error("String failed")
+	}
+
+	if Some("").String() != "Some()" {
+		t.Error("String failed")
+	}
+}
+
+func TestIsZero(t *testing.T) {
+	if !(Option[int]{}).IsZero() {
+		t.Error("zero-value Option should be zero")
+	}
+	if !None[int]().IsZero() {
+		t.Error("None should be zero")
+	}
+	if Some(0).IsZero() {
+		t.Error("Some(zero) should not be zero")
+	}
+}
+
 type mockType struct {
 	name string
 	age  Option[int]

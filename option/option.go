@@ -3,6 +3,8 @@
 // matching, mapping, and binding over it.
 package option
 
+import "fmt"
+
 // Option represents a value that may or may not be present.
 type Option[T any] struct {
 	some  bool
@@ -140,4 +142,19 @@ func Iter[T any](o Option[T], fn func(T)) {
 	if value, ok := o.Value(); ok {
 		fn(value)
 	}
+}
+
+// String returns a readable representation of the option.
+func (o Option[T]) String() string {
+	if o.IsNone() {
+		return "None"
+	}
+
+	v, _ := o.Value()
+	return fmt.Sprintf("Some(%v)", v)
+}
+
+// IsZero reports whether the Option is None.
+func (o Option[T]) IsZero() bool {
+	return o.IsNone()
 }
