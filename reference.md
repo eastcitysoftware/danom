@@ -249,6 +249,8 @@ These functions accept types supported by `cmp.Ordered`.
 - `func MapLengthBetween[K comparable, V any](min, max int) Fact[map[K]V]` succeeds when a map has between `min` and `max` entries, inclusive.
 - `func MapContains[K comparable, V any](key K) Fact[map[K]V]` succeeds when a map contains `key`.
 - `func MapNotContains[K comparable, V any](key K) Fact[map[K]V]` succeeds when a map does not contain `key`.
+- `func MapAll[K comparable, V any](pred func(V) bool) Fact[map[K]V]` succeeds when `pred` succeeds for every map value; an empty map succeeds.
+- `func MapAny[K comparable, V any](pred func(V) bool) Fact[map[K]V]` succeeds when `pred` succeeds for at least one map value; an empty map fails.
 
 ### Option facts
 

@@ -498,16 +498,20 @@ func TestMapNotContains(t *testing.T) {
 }
 
 func TestMapAll(t *testing.T) {
-	runFact(t, MapAll[string, int](MapNotEmpty[string, int](), MapContains[string, int]("a")), []factCase[map[string]int]{
-		{"all pass", map[string]int{"a": 1}, true, ""},
-		{"one fails", map[string]int{"b": 1}, false, ""},
+	runFact(t, MapAll[string, int](func(value int) bool { return value > 0 }), []factCase[map[string]int]{
+		{"all values pass", map[string]int{"a": 1, "b": 2}, true, ""},
+		{"one value fails", map[string]int{"a": 1, "b": 0}, false, "'f' must contain only valid values"},
+		{"empty", map[string]int{}, true, ""},
+		{"nil", nil, true, ""},
 	})
 }
 
 func TestMapAny(t *testing.T) {
-	runFact(t, MapAny[string, int](MapContains[string, int]("a")), []factCase[map[string]int]{
-		{"any pass", map[string]int{"a": 1}, true, ""},
-		{"none pass", map[string]int{"b": 1}, false, ""},
+	runFact(t, MapAny[string, int](func(value int) bool { return value > 0 }), []factCase[map[string]int]{
+		{"one value passes", map[string]int{"a": -1, "b": 2}, true, ""},
+		{"no values pass", map[string]int{"a": -1, "b": 0}, false, "'f' must contain at least one valid value"},
+		{"empty", map[string]int{}, false, "'f' must contain at least one valid value"},
+		{"nil", nil, false, ""},
 	})
 }
 

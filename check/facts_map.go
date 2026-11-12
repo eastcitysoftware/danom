@@ -42,25 +42,32 @@ func MapNotContains[K comparable, V any](key K) Fact[map[K]V] {
 		NewMessage("'%s' must not have key: %v", key))
 }
 
-// MapAll succeeds when all facts succeed.
-func MapAll[K comparable, V any](facts ...Fact[map[K]V]) Fact[map[K]V] {
-	return func(m map[K]V) []Message {
-		var msgs []Message
-		for _, f := range facts {
-			msgs = append(msgs, f(m)...)
-		}
-		return msgs
-	}
+// MapAll succeeds when pred returns true for every map value.
+// It succeeds for an empty map.
+func MapAll[K comparable, V any](pred func(V) bool) Fact[map[K]V] {
+	return NewFact(
+		func(m map[K]V) bool {
+			for _, value := range m {
+				if !pred(value) {
+					return false
+				}
+			}
+			return true
+		},
+		NewMessage("'%s' must contain only valid values"))
 }
 
-// MapAny succeeds when any fact succeeds.
-func MapAny[K comparable, V any](facts ...Fact[map[K]V]) Fact[map[K]V] {
-	return func(m map[K]V) []Message {
-		for _, f := range facts {
-			if len(f(m)) == 0 {
-				return nil
+// MapAny succeeds when pred returns true for at least one map value.
+// It fails for an empty map.
+func MapAny[K comparable, V any](pred func(V) bool) Fact[map[K]V] {
+	return NewFact(
+		func(m map[K]V) bool {
+			for _, value := range m {
+				if pred(value) {
+					return true
+				}
 			}
-		}
-		return []Message{NewMessage("'%s' must satisfy at least one condition")}
-	}
+			return false
+		},
+		NewMessage("'%s' must contain at least one valid value"))
 }
