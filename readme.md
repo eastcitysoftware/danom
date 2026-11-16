@@ -1,16 +1,24 @@
 # danom
 
-[![build](https://github.com/eastcitysoftware/danom/actions/workflows/build.yml/badge.svg)](https://github.com/eastcitysoftware/danom/actions/workflows/build.yml)
+[![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/github.com/eastcitysoftware/danom/v4)
+[![Latest Release](https://img.shields.io/github/v/release/eastcitysoftware/danom?style=flat-square)](https://github.com/eastcitysoftware/danom/releases/latest)
+[![Build Status](https://github.com/eastcitysoftware/danom/actions/workflows/build.yml/badge.svg)](https://github.com/eastcitysoftware/danom/actions/workflows/build.yml)
 
-danom provides generic `Option` and `Result` types, string parsing and conversion helpers, and composable validation for Go. It offers a type-safe way to represent optional values and expected errors, with functions for matching and transforming them.
+danom provides generic `Option` and `Result` types, string conversion helpers, and composable validation for Go, inspired by F#. These discriminated unions offer a type-safe way to represent nullable values, expected errors and decisions, providing an API (e.g., Map, Bind etc.) for value transformations and safe data access.
 
 ## Key Features
 
 - `option.Option[T]` makes the presence or absence of a value explicit.
 - `result.Result[T, E]` represents a successful value or a typed error.
-- `parse` returns standard-library parsing results as `Result` values; `convert` exposes the same conversions as `Option` values.
-- `Map`, `Bind`, `Match`, and related helpers compose transformations and handle each case.
+- `parse` returns standard-library parsing results as `Result` values.
+- `convert` exposes the same conversions as `parse` but produces `Option` values.
 - `check` provides reusable validation rules, composable facts, and collected errors.
+
+## Design Goals
+
+- Enhance functional programming in Go.
+- Support robust use through opinionated monads.
+- Provide accumulative input validation.
 
 ## Getting Started
 
@@ -20,7 +28,7 @@ Install the module with Go:
 go get github.com/eastcitysoftware/danom
 ```
 
-danom requires Go 1.25.0 or later. Import only the packages you need: `option`, `result`, `parse`, `convert`, and `check` are separate packages. See the [API reference](reference.md) for the complete list of types, functions, and built-in validation facts.
+danom requires Go 1.21.0 or later. Import only the packages you need: `option`, `result`, `parse`, `convert`, and `check` are separate packages. See the [API reference](reference.md) for the complete list of types, functions, and built-in validation facts.
 
 ## Option
 
@@ -37,10 +45,18 @@ import (
     "github.com/eastcitysoftware/danom/option"
 )
 
+func doubler(n int) int {
+    return n * 2
+}
+
 func main() {
     value := option.Some(5)
-    doubled := option.Map(value, func(n int) int { return n * 2 })
+    doubled := option.Map(value, doubler)
     fmt.Println(doubled.DefaultValue(0))
+
+    value = option.None[int]()
+    doubled = option.Map(value, doubler)
+    fmt.Println(doubled.DefaultValue(86))
 
     description := option.Match(
         option.None[int](),
@@ -48,12 +64,52 @@ func main() {
         func() string { return "No value" },
     )
     fmt.Println(description)
+
+    number := option.Some(86).
+        Filter(func(n int) bool { return n > 0 }).
+        Tap(func(n int) { fmt.Println("Value:", n) }).
+        DefaultValue(0)
+    fmt.Println("Number:", number)
 }
 ```
 
 `option.Map` transforms a present value and leaves `None` absent. Use `option.Bind` when the transformation already returns an `Option`, so you don't end up with a nested `Option[Option[T]]`. `Filter` keeps a present value only when a predicate succeeds; `Flatten` removes one layer of nesting.
 
 When you need a fallback, `DefaultValue` uses a value you already have, while `DefaultWith` computes one only if the option is `None`. `OrElse` and `OrElseWith` provide the corresponding fallback as another `Option`. `Tap` and `Iter` let you perform an action for a present value without changing the value.
+
+These methods can be chained to express a small pipeline. `Filter` can turn a present value into `None`, `Tap` runs only while a value is present, and `DefaultValue` unwraps the result with a fallback:
+
+```go
+package main
+
+import (
+    "fmt"
+
+    "github.com/eastcitysoftware/danom/option"
+)
+
+type User struct {
+    Name   string
+    Active bool
+}
+
+func isActive(user User) bool {
+    return user.Active
+}
+
+func logUser(user User) {
+    fmt.Printf("active user: %s\n", user.Name)
+}
+
+func main() {
+    anonymousUser := User{Name: "anonymous"}
+    user := option.Some(User{Name: "Ada", Active: true}).
+        Filter(isActive).
+        Tap(logUser).
+        DefaultValue(anonymousUser)
+    fmt.Printf("user: %+v\n", user)
+}
+```
 
 
 `Option[T]` supports Go's `encoding/json`: `Some(value)` is encoded as the JSON value, and `None` as `null`. Decoding `null` produces `None`. Consequently, `Some(nil)` also encodes as `null` and decodes as `None`, so that distinction cannot be preserved through JSON. For struct fields, use the `omitzero` tag to omit `None` instead of encoding it as `null`:
@@ -90,18 +146,27 @@ func parsePort(raw string) result.Result[int, error] {
     if err != nil {
         return result.Error[int, error](fmt.Errorf("parse port: %w", err))
     }
-    if port < 1 || port > 65535 {
-        return result.Error[int, error](errors.New("port must be between 1 and 65535"))
-    }
     return result.Ok[int, error](port)
 }
 
 func main() {
+    port := parsePort("8080").
+        Filter(
+            func(port int) bool { return port >= 1 && port <= 65535 },
+            errors.New("port must be between 1 and 65535"),
+        ).
+        Tap(func(port int) {
+            fmt.Printf("Validated port: %d\n", port)
+        })
+
     message := result.Match(
-        parsePort("8080"),
-        func(port int) string { return fmt.Sprintf("Listening on port %d", port) },
-        func(err error) string { return fmt.Sprintf("Invalid port: %v", err) },
-    )
+        port,
+        func(port int) string {
+            return fmt.Sprintf("Listening on port %d", port)
+        },
+        func(err error) string {
+            return fmt.Sprintf("Invalid port: %v", err)
+        })
     fmt.Println(message)
 }
 ```
@@ -118,23 +183,31 @@ The `parse` package wraps Go's standard parsing functions for booleans, numeric 
 package main
 
 import (
+    "errors"
     "fmt"
 
+    "github.com/eastcitysoftware/danom/convert"
     "github.com/eastcitysoftware/danom/parse"
+    "github.com/eastcitysoftware/danom/result"
 )
 
 func main() {
-    result.Do(parse.Int("86"),
+    port := parse.Int("8080").
+        Filter(func(port int) bool { return port >= 1 && port <= 65535 },
+            errors.New("port must be between 1 and 65535")).
+        Tap(func(port int) { fmt.Println("validated port:", port) })
+    result.Do(port,
         func(n int) { fmt.Println(n) },
         func(e error) { fmt.Println(e) })
 
-    option.Do(convert.Int("86"),
-        func(n int) { fmt.Println(n) },
-        func() { fmt.Println("none") })
+    retries := convert.Int("not a number").
+        Filter(func(n int) bool { return n >= 0 }).
+        DefaultValue(0)
+    fmt.Println("retry count:", retries)
 }
 ```
 
-The `convert` package provides matching functions that return `option.Option[T]` instead. A valid input produces `Some(value)`; invalid input produces `None`, which is useful when the parse error itself is not needed:
+The `convert` package provides matching functions that return `option.Option[T]` instead. A valid input produces `Some(value)`; invalid input produces `None`, which is useful when the parse error itself is not needed, as in the retry-count fallback above:
 
 ```go
 package main
@@ -164,11 +237,13 @@ import (
     "fmt"
 
     "github.com/eastcitysoftware/danom/check"
+    "github.com/eastcitysoftware/danom/option"
 )
 
 type User struct {
-    Name string
-    Age  int
+    Name     string
+    Age      int
+    Nickname option.Option[string]
 }
 
 func main() {
@@ -178,9 +253,12 @@ func main() {
             check.StrLengthBetween(2, 40)),
         check.NewRule("age", func(user User) int { return user.Age },
             check.Between(18, 120)),
+        check.NewRule("nickname",
+            func(user User) option.Option[string] { return user.Nickname },
+            check.Optional(check.StrLengthBetween(2, 20))),
     )
 
-    input := User{Name: "", Age: 16}
+    input := User{Name: "", Age: 16, Nickname: option.Some("A")}
     outcome := validate.Validate(input)
     if user, ok := outcome.Value(); ok {
         fmt.Printf("Valid user: %+v\n", user)
@@ -220,7 +298,9 @@ func main() {
         check.NewMessage("'%s' must be a valid IPv4 address"))
 
     validate := check.NewValidator(
-        check.NewRule("ip", func(u User) string { return u.IP }, isValidIPv4))
+        check.NewRule("ip",
+            func(u User) string { return u.IP },
+            isValidIPv4))
 
     outcome := validate.Validate(User{IP: "192.168.1.1"})
     if _, ok := outcome.Value(); ok {
@@ -239,4 +319,4 @@ There's an [issue](https://github.com/eastcitysoftware/danom/issues) for that.
 
 ## License
 
-Licensed under [MIT](https://github.com/eastcitysoftware/danom/blob/master/LICENSE).
+Licensed under [MIT](https://github.com/eastcitysoftware/danom/blob/main/LICENSE).

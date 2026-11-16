@@ -1,3 +1,3 @@
 module github.com/eastcitysoftware/danom
 
-go 1.25.0
+go 1.21.0
