@@ -26,7 +26,7 @@ type Option[T any] struct { /* unexported fields */ }
 
 - `func (o Option[T]) IsSome() bool` reports whether `o` contains a value.
 - `func (o Option[T]) IsNone() bool` reports whether `o` has no value.
-- `func (o Option[T]) IsZero() bool` reports whether `o` is `None`; supports `encoding/json`'s `omitzero` field tag.
+- `func (o Option[T]) IsZero() bool` reports whether `o` is `None`; supports `encoding/json`'s `omitzero` field tag on Go 1.24 and later.
 - `func (o Option[T]) Value() (T, bool)` returns the value and `true` when `o` is `Some`; otherwise returns the zero value and `false`.
 - `func (o Option[T]) DefaultValue(d T) T` returns the value or `d` when `o` is `None`.
 - `func (o Option[T]) DefaultWith(fn func() T) T` returns the value or calls `fn` when `o` is `None`.
@@ -37,7 +37,7 @@ type Option[T any] struct { /* unexported fields */ }
 - `func (o Option[T]) MarshalJSON() ([]byte, error)` encodes `None` as `null` and `Some` as its value's JSON representation.
 - `func (o *Option[T]) UnmarshalJSON(data []byte) error` decodes `null` as `None` and any other valid JSON value as `Some`.
 
-`Some(nil)` also encodes as `null`, so decoding it produces `None`; JSON encoding does not preserve the distinction between `Some(nil)` and `None`. In struct fields, `json:"field,omitzero"` omits `None` while retaining `Some` even when its value is the type's zero value. Without `omitzero`, `None` is encoded as `null`.
+`Some(nil)` also encodes as `null`, so decoding it produces `None`; JSON encoding does not preserve the distinction between `Some(nil)` and `None`. On Go 1.24 and later, `json:"field,omitzero"` omits `None` while retaining `Some` even when its value is the type's zero value. Go 1.21 through 1.23 do not recognize `omitzero`, so `None` is encoded as `null`.
 
 ### Functions
 

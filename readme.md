@@ -112,7 +112,7 @@ func main() {
 ```
 
 
-`Option[T]` supports Go's `encoding/json`: `Some(value)` is encoded as the JSON value, and `None` as `null`. Decoding `null` produces `None`. Consequently, `Some(nil)` also encodes as `null` and decodes as `None`, so that distinction cannot be preserved through JSON. For struct fields, use the `omitzero` tag to omit `None` instead of encoding it as `null`:
+`Option[T]` supports Go's `encoding/json`: `Some(value)` is encoded as the JSON value, and `None` as `null`. Decoding `null` produces `None`. Consequently, `Some(nil)` also encodes as `null` and decodes as `None`, so that distinction cannot be preserved through JSON. On Go 1.24 and later, use the `omitzero` tag to omit `None` instead of encoding it as `null`:
 
 ```go
 import "github.com/eastcitysoftware/danom/option"
@@ -122,7 +122,7 @@ type User struct {
 }
 ```
 
-`IsZero` reports true only for `None`, so `Some` containing a zero value is retained. The `omitzero` tag omits absent fields; without it, `None` is emitted as `null`.
+`IsZero` reports true only for `None`, so `Some` containing a zero value is retained. Go 1.21 through 1.23 do not recognize the `omitzero` tag; on those versions, `None` is emitted as `null`.
 
 ## Result
 
