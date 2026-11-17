@@ -240,21 +240,24 @@ func TestFilter(t *testing.T) {
 }
 
 func TestDo(t *testing.T) {
-	state := 0
+	someCalled := false
+	noneCalled := false
 	None[string]().Do(
-		func(x string) { state = 1 },
-		func() {})
+		func(string) { someCalled = true },
+		func() { noneCalled = true })
 
-	if state == 1 {
-		t.Error("Should not have invoked Some branch in do")
+	if someCalled || !noneCalled {
+		t.Error("Do should invoke only the None handler for None")
 	}
 
+	someCalled = false
+	noneCalled = false
 	Some[string]("danom").Do(
-		func(x string) {},
-		func() { state = 2 })
+		func(string) { someCalled = true },
+		func() { noneCalled = true })
 
-	if state == 2 {
-		t.Error("Should not have invoked Some branch in do")
+	if !someCalled || noneCalled {
+		t.Error("Do should invoke only the Some handler for Some")
 	}
 }
 
