@@ -91,6 +91,22 @@ func (o Option[T]) Filter(pred func(T) bool) Option[T] {
 	return None[T]()
 }
 
+// Do calls the handler for the state of o.
+func (o Option[T]) Do(some func(T), none func()) {
+	if value, ok := o.Value(); ok {
+		some(value)
+	} else {
+		none()
+	}
+}
+
+// Iter calls fn with the value when o is Some.
+func (o Option[T]) Iter(fn func(T)) {
+	if value, ok := o.Value(); ok {
+		fn(value)
+	}
+}
+
 // Match calls some with the value when o is Some, or calls none otherwise.
 func Match[T any, U any](o Option[T], some func(T) U, none func() U) U {
 	if value, ok := o.Value(); ok {
@@ -126,22 +142,6 @@ func Flatten[T any](o Option[Option[T]]) Option[T] {
 	}
 
 	return None[T]()
-}
-
-// Do calls the handler for the state of o.
-func Do[T any](o Option[T], some func(T), none func()) {
-	if value, ok := o.Value(); ok {
-		some(value)
-	} else {
-		none()
-	}
-}
-
-// Iter calls fn with the value when o is Some.
-func Iter[T any](o Option[T], fn func(T)) {
-	if value, ok := o.Value(); ok {
-		fn(value)
-	}
 }
 
 // String returns a readable representation of the option.

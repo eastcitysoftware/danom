@@ -239,6 +239,45 @@ func TestFilter(t *testing.T) {
 	}
 }
 
+func TestDo(t *testing.T) {
+	state := 0
+	None[string]().Do(
+		func(x string) { state = 1 },
+		func() {})
+
+	if state == 1 {
+		t.Error("Should not have invoked Some branch in do")
+	}
+
+	Some[string]("danom").Do(
+		func(x string) {},
+		func() { state = 2 })
+
+	if state == 2 {
+		t.Error("Should not have invoked Some branch in do")
+	}
+}
+
+func TestIter(t *testing.T) {
+	state := 0
+
+	None[int]().Iter(func(n int) {
+		state = n
+	})
+
+	if state != 0 {
+		t.Error("Iter should not invoke callback for None")
+	}
+
+	Some(86).Iter(func(n int) {
+		state = n
+	})
+
+	if state != 86 {
+		t.Error("Iter should invoke callback with Some value")
+	}
+}
+
 func TestMatch(t *testing.T) {
 	if Match(None[string](),
 		func(x string) bool { return true },
@@ -318,45 +357,6 @@ func TestApply(t *testing.T) {
 	value = Match(result, func(n int) int { return n }, func() int { return 0 })
 	if value != 0 {
 		t.Error("Apply function should not return Some")
-	}
-}
-
-func TestDo(t *testing.T) {
-	state := 0
-	Do(None[string](),
-		func(x string) { state = 1 },
-		func() {})
-
-	if state == 1 {
-		t.Error("Should not have invoked Some branch in do")
-	}
-
-	Do(Some[string]("danom"),
-		func(x string) {},
-		func() { state = 2 })
-
-	if state == 2 {
-		t.Error("Should not have invoked Some branch in do")
-	}
-}
-
-func TestIter(t *testing.T) {
-	state := 0
-
-	Iter(None[int](), func(n int) {
-		state = n
-	})
-
-	if state != 0 {
-		t.Error("Iter should not invoke callback for None")
-	}
-
-	Iter(Some(86), func(n int) {
-		state = n
-	})
-
-	if state != 86 {
-		t.Error("Iter should invoke callback with Some value")
 	}
 }
 
