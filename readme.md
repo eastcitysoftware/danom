@@ -75,7 +75,7 @@ func main() {
 
 `option.Map` transforms a present value and leaves `None` absent. Use `option.Bind` when the transformation already returns an `Option`, so you don't end up with a nested `Option[Option[T]]`. `Filter` keeps a present value only when a predicate succeeds; `Flatten` removes one layer of nesting.
 
-When you need a fallback, `DefaultValue` uses a value you already have, while `DefaultWith` computes one only if the option is `None`. `OrElse` and `OrElseWith` provide the corresponding fallback as another `Option`. `Tap` and `Iter` let you perform an action for a present value without changing the value.
+When you need a fallback, `DefaultValue` uses a value you already have, while `DefaultWith` computes one only if the option is `None`. `OrElse` and `OrElseWith` provide the corresponding fallback as another `Option`. `Tap` and `Iter` let you perform an action for a present value without changing the value. `Do` lets you handle both the `Some` and `None` cases.
 
 These methods can be chained to express a small pipeline. `Filter` can turn a present value into `None`, `Tap` runs only while a value is present, and `DefaultValue` unwraps the result with a fallback:
 
@@ -171,7 +171,7 @@ func main() {
 }
 ```
 
-`Value` and `ErrorValue` return a value and a boolean for conventional branching; `Match` and `Do` handle both cases through callbacks. `result.Map` transforms only a success, and `result.Bind` chains an operation that can also fail. `MapError` transforms only the error, which is useful when adapting one error type to another.
+`Value` and `ErrorValue` return a value and a boolean for conventional branching; `Match` handles both cases through callbacks that return a value. The `Do` method handles both cases without returning a value, while `Iter` runs a callback only for a success. `result.Map` transforms only a success, and `result.Bind` chains an operation that can also fail. `MapError` transforms only the error, which is useful when adapting one error type to another.
 
 `OrElse` and `OrElseWith` provide alternate results on failure; `DefaultValue` and `DefaultWith` extract a success or use a fallback value. Use these when discarding or recovering from the error is intentional. `Result` does not replace Go's `error` interface: use `E = error` when you want standard error wrapping and inspection.
 
@@ -188,7 +188,6 @@ import (
 
     "github.com/eastcitysoftware/danom/convert"
     "github.com/eastcitysoftware/danom/parse"
-    "github.com/eastcitysoftware/danom/result"
 )
 
 func main() {
@@ -196,7 +195,7 @@ func main() {
         Filter(func(port int) bool { return port >= 1 && port <= 65535 },
             errors.New("port must be between 1 and 65535")).
         Tap(func(port int) { fmt.Println("validated port:", port) })
-    result.Do(port,
+    port.Do(
         func(n int) { fmt.Println(n) },
         func(e error) { fmt.Println(e) })
 

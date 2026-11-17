@@ -33,6 +33,8 @@ type Option[T any] struct { /* unexported fields */ }
 - `func (o Option[T]) OrElse(ifNone Option[T]) Option[T]` returns `o` when it is `Some`, or `ifNone` otherwise.
 - `func (o Option[T]) OrElseWith(ifNone func() Option[T]) Option[T]` returns `o` when it is `Some`, or calls `ifNone` otherwise.
 - `func (o Option[T]) Tap(fn func(T)) Option[T]` calls `fn` with the value when `o` is `Some`, then returns `o`.
+- `func (o Option[T]) Do(some func(T), none func())` calls the handler for the state of `o`.
+- `func (o Option[T]) Iter(fn func(T))` calls `fn` when `o` is `Some`.
 - `func (o Option[T]) Filter(pred func(T) bool) Option[T]` returns `o` when its value satisfies `pred`, or `None` otherwise.
 - `func (o Option[T]) MarshalJSON() ([]byte, error)` encodes `None` as `null` and `Some` as its value's JSON representation.
 - `func (o *Option[T]) UnmarshalJSON(data []byte) error` decodes `null` as `None` and any other valid JSON value as `Some`.
@@ -44,11 +46,9 @@ type Option[T any] struct { /* unexported fields */ }
 - `func Some[T any](val T) Option[T]` creates an `Option` containing `val`.
 - `func None[T any]() Option[T]` creates an `Option` with no value.
 - `func Match[T any, U any](o Option[T], some func(T) U, none func() U) U` calls the handler for the state of `o` and returns its result.
-- `func Do[T any](o Option[T], some func(T), none func())` calls the handler for the state of `o`.
 - `func Bind[T any, U any](o Option[T], fn func(T) Option[U]) Option[U]` applies `fn` to the value, or returns `None`.
 - `func Map[T any, U any](o Option[T], fn func(T) U) Option[U]` transforms the value, or returns `None`.
 - `func Apply[T any, U any](o Option[T], fn Option[func(T) U]) Option[U]` applies an optional function to an optional value.
-- `func Iter[T any](o Option[T], fn func(T))` calls `fn` when `o` is `Some`.
 - `func Flatten[T any](o Option[Option[T]]) Option[T]` converts a nested `Option` into one `Option`.
 
 ## `result`
@@ -74,19 +74,19 @@ type Result[T any, E any] struct { /* unexported fields */ }
 - `func (r Result[T, E]) OrElse(ifError Result[T, E]) Result[T, E]` returns `r` when it is `Ok`, or `ifError` otherwise.
 - `func (r Result[T, E]) OrElseWith(ifError func() Result[T, E]) Result[T, E]` returns `r` when it is `Ok`, or calls `ifError` otherwise.
 - `func (r Result[T, E]) Tap(fn func(T)) Result[T, E]` calls `fn` with the success value, then returns `r`.
+- `func (r Result[T, E]) Do(ok func(T), error func(E))` calls the handler for the state of `r`.
+- `func (r Result[T, E]) Iter(fn func(T))` calls `fn` when `r` is `Ok`.
 - `func (r Result[T, E]) Filter(pred func(T) bool, ifError E) Result[T, E]` preserves an existing error; for an `Ok`, it preserves the value when `pred` is true or returns an error containing `ifError`.
 
 ### Functions
 
-- `func Ok[T any, E any](t T) Result[T, E]` creates a successful `Result`.
+- `func Ok[E any, T any](t T) Result[T, E]` creates a successful `Result`. `T` is inferred from `t`; specify `E` as the type argument when needed, for example `Ok[error](value)`.
 - `func Error[T any, E any](e E) Result[T, E]` creates an error `Result`.
 - `func Match[T any, E any, U any](r Result[T, E], ok func(T) U, error func(E) U) U` calls the handler for the state of `r` and returns its result.
-- `func Do[T any, E any](r Result[T, E], ok func(T), error func(E))` calls the handler for the state of `r`.
 - `func Bind[T any, E any, U any](r Result[T, E], fn func(T) Result[U, E]) Result[U, E]` applies `fn` to the success value, or preserves the error.
 - `func Map[T any, E any, U any](r Result[T, E], fn func(T) U) Result[U, E]` transforms the success value, or preserves the error.
 - `func MapError[T any, E any, U any](r Result[T, E], fn func(E) U) Result[T, U]` transforms the error value, or preserves the success value.
 - `func Apply[T any, E any, U any](r Result[T, E], fn Result[func(T) U, E]) Result[U, E]` applies a successful function to a successful value.
-- `func Iter[T any, E any](r Result[T, E], fn func(T))` calls `fn` when `r` is `Ok`.
 - `func Flatten[T any, E any](r Result[Result[T, E], E]) Result[T, E]` converts a nested `Result` into a single `Result`.
 
 ## `parse`
