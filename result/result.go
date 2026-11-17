@@ -11,7 +11,7 @@ type Result[T any, E any] struct {
 }
 
 // Ok creates a Result that contains t.
-func Ok[T any, E any](t T) Result[T, E] {
+func Ok[E any, T any](t T) Result[T, E] {
 	var zero E
 	return Result[T, E]{true, t, zero}
 }
@@ -105,10 +105,27 @@ func (r Result[T, E]) Filter(pred func(T) bool, ifError E) Result[T, E] {
 	}
 
 	if value, ok := r.Value(); ok && pred(value) {
-		return Ok[T, E](value)
+		return Ok[E](value)
 	}
 
 	return Error[T](ifError)
+}
+
+// Do calls the handler for the state of r.
+func (r Result[T, E]) Do(ok func(T), error func(E)) {
+	if value, isOk := r.Value(); isOk {
+		ok(value)
+	} else {
+		err, _ := r.ErrorValue()
+		error(err)
+	}
+}
+
+// Iter calls fn with the success value when r is Ok.
+func (r Result[T, E]) Iter(fn func(T)) {
+	if value, isOk := r.Value(); isOk {
+		fn(value)
+	}
 }
 
 // Match calls the handler for the state of r and returns its result.
@@ -129,13 +146,13 @@ func Bind[T any, E any, U any](r Result[T, E], fn func(T) Result[U, E]) Result[U
 // Map transforms the success value, or preserves the error value.
 func Map[T any, E any, U any](r Result[T, E], fn func(T) U) Result[U, E] {
 	return Bind(r, func(x T) Result[U, E] {
-		return Ok[U, E](fn(x))
+		return Ok[E](fn(x))
 	})
 }
 
 // MapError transforms the error value, or preserves the success value.
 func MapError[T any, E any, U any](r Result[T, E], fn func(E) U) Result[T, U] {
-	return Match(r, Ok[T, U], func(e E) Result[T, U] {
+	return Match(r, Ok[U], func(e E) Result[T, U] {
 		return Error[T, U](fn(e))
 	})
 }
@@ -155,19 +172,4 @@ func Flatten[T any, E any](r Result[Result[T, E], E]) Result[T, E] {
 
 	err, _ := r.ErrorValue()
 	return Error[T, E](err)
-}
-
-// Do calls the handler for the state of r.
-func Do[T any, E any](r Result[T, E], ok func(T), error func(E)) {
-	if value, isOk := r.Value(); isOk {
-		ok(value)
-	} else {
-		err, _ := r.ErrorValue()
-		error(err)
-	}
-}
-
-// Iter calls fn with the success value when r is Ok.
-func Iter[T any, E any](o Result[T, E], fn func(T)) {
-	Do(o, fn, func(_ E) {})
 }
