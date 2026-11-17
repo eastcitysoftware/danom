@@ -45,10 +45,10 @@ func NewValidator[T any](rules ...Rule[T]) Validator[T] {
 		}
 
 		if len(errors) > 0 {
-			return result.Error[T, Errors](errors)
+			return result.Error[T](errors)
 		}
 
-		return result.Ok[T, Errors](input)
+		return result.Ok[Errors](input)
 	}
 }
 
