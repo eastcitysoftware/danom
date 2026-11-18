@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.1.3 - unreleased
+
+### Added
+
+- Added `option.Of` and `result.Of` constructors for conditionally creating an `Option` and converting a `(value, error)` pair into a `Result`.
+- Added the `result.IterError` method to run a callback only for an error value.
+
 ## v0.1.2 - 2026-11-17
 
 ### Breaking changes

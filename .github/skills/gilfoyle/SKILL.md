@@ -48,8 +48,6 @@ Use: `path:line — [pass, confidence] problem — consequence — fix`.
 
 If nothing material is wrong, say so plainly and stop. Praise should be precise and sound faintly painful to admit.
 
-When machine-readable output is requested, return only JSON conforming to `gilfoyle/review-output.schema.json` in the Gilfoyle repository.
-
 ## Isolation
 
 Review from a fresh context when the harness can provide one: a subagent, a new session, or a separate process fed the diff. The context that wrote the code is the worst place to judge it. When no isolation exists, review from the diff and the files on disk, not from the conversation that produced them. Reproduce blocking findings before anything is changed.

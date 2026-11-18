@@ -1,6 +1,7 @@
 package result
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -14,6 +15,20 @@ func TestError(t *testing.T) {
 	expectError(t, Error[int]("error"))
 	expectError(t, Error[rune]("error"))
 	expectError(t, Error[string]("error"))
+}
+
+func TestOf(t *testing.T) {
+	value, ok := Of(42, nil).Value()
+	if !ok || value != 42 {
+		t.Fatalf("Of(42, nil) = %v, %v; want 42, true", value, ok)
+	}
+
+	wantErr := errors.New("failure")
+	result := Of(42, wantErr)
+	errValue, ok := result.ErrorValue()
+	if !ok || !errors.Is(errValue, wantErr) {
+		t.Fatalf("Of(42, wantErr) error = %v, %v; want %v, true", errValue, ok, wantErr)
+	}
 }
 
 func TestIsOk(t *testing.T) {
@@ -239,6 +254,26 @@ func TestIter(t *testing.T) {
 
 	if state != 1 {
 		t.Error("Iter should invoke callback with Ok value")
+	}
+}
+
+func TestIterError(t *testing.T) {
+	state := 0
+
+	Ok[string](1).IterError(func(n string) {
+		state = 1
+	})
+
+	if state != 0 {
+		t.Error("IterError should not invoke callback for Ok")
+	}
+
+	Error[int]("danom").IterError(func(n string) {
+		state = 1
+	})
+
+	if state != 1 {
+		t.Error("IterError should invoke callback with Error value")
 	}
 }
 

@@ -21,6 +21,15 @@ func None[T any]() Option[T] {
 	return Option[T]{some: false}
 }
 
+// Of creates a Some containing val when b is true, or a None otherwise.
+func Of[T any](val T, b bool) Option[T] {
+	if b {
+		return Some(val)
+	}
+
+	return None[T]()
+}
+
 // IsSome reports whether the Option contains a value.
 func (o Option[T]) IsSome() bool {
 	return o.some == true

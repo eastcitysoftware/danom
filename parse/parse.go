@@ -12,11 +12,7 @@ import (
 
 // Bool parses x as a boolean using strconv.ParseBool.
 func Bool(x string) result.Result[bool, error] {
-	if b, e := strconv.ParseBool(x); e == nil {
-		return result.Ok[error](b)
-	} else {
-		return result.Error[bool](e)
-	}
+	return result.Of(strconv.ParseBool(x))
 }
 
 // Float32 parses x as a 32-bit floating-point number using strconv.ParseFloat.
@@ -30,11 +26,7 @@ func Float32(x string) result.Result[float32, error] {
 
 // Float64 parses x as a 64-bit floating-point number using strconv.ParseFloat.
 func Float64(x string) result.Result[float64, error] {
-	if i, e := strconv.ParseFloat(x, 64); e == nil {
-		return result.Ok[error](i)
-	} else {
-		return result.Error[float64](e)
-	}
+	return result.Of(strconv.ParseFloat(x, 64))
 }
 
 // Int parses x as an int.
@@ -75,11 +67,7 @@ func Int32(x string) result.Result[int32, error] {
 
 // Int64 parses x as a base-10, 64-bit signed integer.
 func Int64(x string) result.Result[int64, error] {
-	if i, e := strconv.ParseInt(x, 10, 64); e == nil {
-		return result.Ok[error](i)
-	} else {
-		return result.Error[int64](e)
-	}
+	return result.Of(strconv.ParseInt(x, 10, 64))
 }
 
 // Uint parses x as a base-10 unsigned integer.
@@ -138,29 +126,17 @@ func Complex64(x string) result.Result[complex64, error] {
 
 // Complex128 parses x as a 128-bit complex number using strconv.ParseComplex.
 func Complex128(x string) result.Result[complex128, error] {
-	if i, e := strconv.ParseComplex(x, 128); e == nil {
-		return result.Ok[error](i)
-	} else {
-		return result.Error[complex128](e)
-	}
+	return result.Of(strconv.ParseComplex(x, 128))
 }
 
 // Duration parses x as a duration using time.ParseDuration.
 func Duration(x string) result.Result[time.Duration, error] {
-	if d, e := time.ParseDuration(x); e == nil {
-		return result.Ok[error](d)
-	} else {
-		return result.Error[time.Duration](e)
-	}
+	return result.Of(time.ParseDuration(x))
 }
 
 // Time parses x using the given Go time layout.
 func Time(x string, layout string) result.Result[time.Time, error] {
-	if t, e := time.Parse(layout, x); e == nil {
-		return result.Ok[error](t)
-	} else {
-		return result.Error[time.Time](e)
-	}
+	return result.Of(time.Parse(layout, x))
 }
 
 // TimeRFC3339 parses x using the RFC3339 time layout.

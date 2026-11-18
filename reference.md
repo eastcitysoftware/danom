@@ -45,6 +45,7 @@ type Option[T any] struct { /* unexported fields */ }
 
 - `func Some[T any](val T) Option[T]` creates an `Option` containing `val`.
 - `func None[T any]() Option[T]` creates an `Option` with no value.
+- `func Of[T any](val T, b bool) Option[T]` creates a `Some` when `b` is true, or a `None` otherwise.
 - `func Match[T any, U any](o Option[T], some func(T) U, none func() U) U` calls the handler for the state of `o` and returns its result.
 - `func Bind[T any, U any](o Option[T], fn func(T) Option[U]) Option[U]` applies `fn` to the value, or returns `None`.
 - `func Map[T any, U any](o Option[T], fn func(T) U) Option[U]` transforms the value, or returns `None`.
@@ -76,12 +77,14 @@ type Result[T any, E any] struct { /* unexported fields */ }
 - `func (r Result[T, E]) Tap(fn func(T)) Result[T, E]` calls `fn` with the success value, then returns `r`.
 - `func (r Result[T, E]) Do(ok func(T), error func(E))` calls the handler for the state of `r`.
 - `func (r Result[T, E]) Iter(fn func(T))` calls `fn` when `r` is `Ok`.
+- `func (r Result[T, E]) IterError(fn func(E))` calls `fn` when `r` is `Error`.
 - `func (r Result[T, E]) Filter(pred func(T) bool, ifError E) Result[T, E]` preserves an existing error; for an `Ok`, it preserves the value when `pred` is true or returns an error containing `ifError`.
 
 ### Functions
 
 - `func Ok[E any, T any](t T) Result[T, E]` creates a successful `Result`. `T` is inferred from `t`; specify `E` as the type argument when needed, for example `Ok[error](value)`.
 - `func Error[T any, E any](e E) Result[T, E]` creates an error `Result`.
+- `func Of[T any](val T, e error) Result[T, error]` creates an `Ok` when `e` is nil, or an `Error` containing `e` otherwise.
 - `func Match[T any, E any, U any](r Result[T, E], ok func(T) U, error func(E) U) U` calls the handler for the state of `r` and returns its result.
 - `func Bind[T any, E any, U any](r Result[T, E], fn func(T) Result[U, E]) Result[U, E]` applies `fn` to the success value, or preserves the error.
 - `func Map[T any, E any, U any](r Result[T, E], fn func(T) U) Result[U, E]` transforms the success value, or preserves the error.

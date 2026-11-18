@@ -11,15 +11,23 @@ type Result[T any, E any] struct {
 }
 
 // Ok creates a Result that contains t.
-func Ok[E any, T any](t T) Result[T, E] {
+func Ok[E any, T any](val T) Result[T, E] {
 	var zero E
-	return Result[T, E]{true, t, zero}
+	return Result[T, E]{true, val, zero}
 }
 
 // Error creates a Result that contains e.
 func Error[T any, E any](e E) Result[T, E] {
 	var zero T
 	return Result[T, E]{false, zero, e}
+}
+
+// Of creates an Ok containing val when e is nil, or an Error containing e otherwise.
+func Of[T any](val T, e error) Result[T, error] {
+	if e != nil {
+		return Error[T](e)
+	}
+	return Ok[error](val)
 }
 
 // IsOk reports whether the Result contains a success value.
@@ -125,6 +133,13 @@ func (r Result[T, E]) Do(ok func(T), error func(E)) {
 func (r Result[T, E]) Iter(fn func(T)) {
 	if value, isOk := r.Value(); isOk {
 		fn(value)
+	}
+}
+
+// IterError calls fn with the error value when r is Error.
+func (r Result[T, E]) IterError(fn func(E)) {
+	if errValue, err := r.ErrorValue(); err {
+		fn(errValue)
 	}
 }
 

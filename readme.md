@@ -32,7 +32,7 @@ danom requires Go 1.21.0 or later. Import only the packages you need: `option`, 
 
 ## Option
 
-Use `Option[T]` when a value may legitimately be absent, for example, a lookup that might not find a record. This keeps absence distinct from a type's zero value. `option.Some(value)` represents a present value even when `value` is nil; `option.None[T]()` represents no value. The zero value of `Option[T]` is also `None`.
+Use `Option[T]` when a value may legitimately be absent, for example, a lookup that might not find a record. This keeps absence distinct from a type's zero value. `option.Some(value)` represents a present value even when `value` is nil; `option.None[T]()` represents no value. Use `option.Of(value, condition)` when a boolean condition determines whether to create `Some` or `None`. The zero value of `Option[T]` is also `None`.
 
 Use `Value` when ordinary Go control flow is clearest, or `Match` when both cases should produce the same result type:
 
@@ -171,7 +171,7 @@ func main() {
 }
 ```
 
-`Value` and `ErrorValue` return a value and a boolean for conventional branching; `Match` handles both cases through callbacks that return a value. The `Do` method handles both cases without returning a value, while `Iter` runs a callback only for a success. `result.Map` transforms only a success, and `result.Bind` chains an operation that can also fail. `MapError` transforms only the error, which is useful when adapting one error type to another.
+`Value` and `ErrorValue` return a value and a boolean for conventional branching; `Match` handles both cases through callbacks that return a value. Use `result.Of(value, err)` to convert a conventional Go `(value, error)` pair into an `Ok` or `Error`. The `Do` method handles both cases without returning a value, while `Iter` runs a callback only for a success and `IterError` runs one only for an error. `result.Map` transforms only a success, and `result.Bind` chains an operation that can also fail. `MapError` transforms only the error, which is useful when adapting one error type to another.
 
 `OrElse` and `OrElseWith` provide alternate results on failure; `DefaultValue` and `DefaultWith` extract a success or use a fallback value. Use these when discarding or recovering from the error is intentional. `Result` does not replace Go's `error` interface: use `E = error` when you want standard error wrapping and inspection.
 

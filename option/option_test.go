@@ -44,6 +44,17 @@ func TestNone(t *testing.T) {
 	expectNone(t, mockType{name: "danom", age: None[int]()}.age)
 }
 
+func TestOf(t *testing.T) {
+	value, ok := Of(42, true).Value()
+	if !ok || value != 42 {
+		t.Fatalf("Of(42, true) = %v, %v; want 42, true", value, ok)
+	}
+
+	if _, ok := Of(42, false).Value(); ok {
+		t.Fatal("Of(42, false) should return None")
+	}
+}
+
 func TestSomeNil(t *testing.T) {
 	var ptr *int
 
